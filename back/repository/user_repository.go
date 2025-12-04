@@ -40,3 +40,8 @@ func (r *UserRepository) GetByID(id uint) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+// UpdatePassword 修改密码（需先查询用户，再更新）
+func (r *UserRepository) UpdatePassword(user *model.User) error {
+	return r.db.Save(user).Error
+}

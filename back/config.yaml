@@ -5,9 +5,9 @@ server:
 mysql:
   host: "localhost"
   port: "3306"
-  dbname: "my_blog"
+  dbname: "demo"
   username: "root"
-  password: "123456"  # 你的MySQL密码
+  password: "Passw0rd"  # 你的MySQL密码
   charset: "utf8mb4"
 # JWT配置
 jwt:

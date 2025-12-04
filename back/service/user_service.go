@@ -63,3 +63,31 @@ func (s *UserService) Login(username, password string) (token string, userInfo m
 
 	return token, userInfo, nil
 }
+// GetInfo 根据ID获取用户信息
+func (s *UserService) GetInfo(id uint) (*model.User, error) {
+	return s.userRepo.GetByID(id)
+}
+
+// ChangePassword 修改密码
+func (s *UserService) ChangePassword(userID uint, oldPwd, newPwd string) error {
+	// 查询用户
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	// 校验原密码
+	if !util.BcryptCompare(user.Password, oldPwd) {
+		return errors.New("原密码错误")
+	}
+
+	// 加密新密码
+	hashPwd, err := util.BcryptEncrypt(newPwd)
+	if err != nil {
+		return err
+	}
+
+	// 更新密码
+	user.Password = hashPwd
+	return s.userRepo.UpdatePassword(user)
+}

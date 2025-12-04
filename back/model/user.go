@@ -13,6 +13,7 @@ type User struct {
 	Password string      `gorm:"size:100;not null" json:"-"`             // 密码（加密，返回前端时隐藏）
 	Avatar   string      `gorm:"size:255" json:"avatar"`                 // 头像URL
 	Role     string      `gorm:"size:10;default:'user'" json:"role"`     // 角色（admin/user）
+	Articles []Article `gorm:"foreignKey:UserID" json:"-"`
 }
 
 // BeforeSave GORM钩子：保存用户前自动加密密码
