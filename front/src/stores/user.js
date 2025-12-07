@@ -1,27 +1,27 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 
-export const useUserStore = defineStore('user', () => {
-  // 状态：令牌、用户信息
-  const token = ref(localStorage.getItem('token') || '')
-  const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
-
-  // 保存用户信息（登录后调用）
-  const setUser = (t, info) => {
-    token.value = t
-    userInfo.value = info
-    // 持久化到本地存储
-    localStorage.setItem('token', t)
-    localStorage.setItem('userInfo', JSON.stringify(info))
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    token: localStorage.getItem('token') || '',
+    userInfo: {
+      id: 0,
+      username: '',
+      avatar: '',
+      role: ''
+    }
+  }),
+  actions: {
+    // 设置用户信息
+    setUser(token, userInfo) {
+      this.token = token
+      this.userInfo = userInfo
+      localStorage.setItem('token', token)
+    },
+    // 清空用户信息
+    clearUser() {
+      this.token = ''
+      this.userInfo = { id: 0, username: '', avatar: '', role: '' }
+      localStorage.removeItem('token')
+    }
   }
-
-  // 清空用户信息（退出登录/令牌过期）
-  const clearUser = () => {
-    token.value = ''
-    userInfo.value = {}
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
-  }
-
-  return { token, userInfo, setUser, clearUser }
 })

@@ -1,93 +1,105 @@
 package router
 
 import (
-	"back/controller"
-	"back/middleware"
-	"back/model"
-	"back/repository"
-	"back/service"
+	"back/controller" // 替换：my-blog-backend → back
+	"back/middleware" // 替换：my-blog-backend → back
+	"back/repository" // 替换：my-blog-backend → back
+	"back/service"    // 替换：my-blog-backend → back
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-// InitRouter 初始化路由（核心：保证所有接口路径为 /api/v1/xxx，与前端完全匹配）
-func InitRouter() *gin.Engine {
-	// 1. 创建Gin引擎（默认包含Logger和Recovery中间件）
-	r := gin.Default()
+// InitRouter 初始化路由（核心入口，接收数据库连接）
+// 分层依赖：DB → Repository → Service → Controller
+func InitRouter(db *gorm.DB) *gin.Engine {
+    // 1. 初始化Gin引擎（开启默认日志和恢复中间件）
+    r := gin.Default()
 
-	// 2. 全局中间件（必须放在最前面，解决跨域+404前置拦截）
-	r.Use(middleware.CorsMiddleware()) // 跨域中间件（关键：避免前端跨域+404）
+    // 2. 全局中间件配置
+    r.Use(
+        middleware.CorsMiddleware(),       // 跨域中间件
+        gin.Recovery(),                    // 崩溃恢复
+        gin.Logger(),                      // 请求日志
+    )
 
-	// 3. 依赖注入（核心：按 Repository → Service → Controller 顺序初始化）
-	// 3.1 获取全局数据库连接（从model包的DB）
-	db := model.DB
-	if db == nil {
-		panic("数据库连接未初始化！") // 提前报错，避免运行时nil指针
-	}
+    // 3. 初始化各层依赖（核心：解决依赖注入错误）
+    // ========== 用户模块 ==========
+    userRepo := repository.NewUserRepository(db)
+    userService := service.NewUserService(userRepo)
+    userController := controller.NewUserController(userService)
 
-	// 3.2 初始化Repository层
-	userRepo := repository.NewUserRepository(db)
-	categoryRepo := repository.NewCategoryRepository(db)
-	articleRepo := repository.NewArticleRepository(db)
+    // ========== 文章模块 ==========
+    articleRepo := repository.NewArticleRepository(db)
+    articleService := service.NewArticleService(articleRepo)
+    articleController := controller.NewArticleController(articleService)
 
-	// 3.3 初始化Service层
-	userService := service.NewUserService(userRepo)
-	categoryService := service.NewCategoryService(categoryRepo)
-	articleService := service.NewArticleService(articleRepo, categoryRepo)
+    // ========== 分类模块 ==========
+    categoryRepo := repository.NewCategoryRepository(db)
+    categoryService := service.NewCategoryService(categoryRepo)
+    categoryController := controller.NewCategoryController(categoryService)
 
-	// 3.4 初始化Controller层
-	userController := controller.NewUserController(userService)
-	categoryController := controller.NewCategoryController(categoryService)
-	articleController := controller.NewArticleController(articleService)
+    // 4. API路由分组（版本控制：/api/v1）
+    apiV1 := r.Group("/api/v1")
+    {
+        // ========== 用户相关路由 ==========
+        userGroup := apiV1.Group("/user")
+        {
+            // 公开接口（无需登录）
+            userGroup.POST("/register", userController.Register) // 注册
+            userGroup.POST("/login", userController.Login)       // 登录
 
-	// 4. 路由分组（核心：/api/v1，与前端请求路径完全一致）
-	apiV1 := r.Group("/api/v1") // 必须是 /api/v1，前端请求路径以此开头
-	{
-		// 4.1 公开接口（无需登录，无JWT校验）
-		public := apiV1.Group("")
-		{
-			// ====== 用户模块公开接口 ======
-			public.POST("/user/register", userController.Register) // 注册：POST /api/v1/user/register
-			public.POST("/user/login", userController.Login)       // 登录：POST /api/v1/user/login
+            // 需登录接口（JWT认证）
+            userAuthGroup := userGroup.Group("/")
+            userAuthGroup.Use(middleware.JWTMiddleware()) // JWT拦截器
+            {
+                userAuthGroup.GET("/info", userController.GetUserInfo)         // 获取用户信息
+                userAuthGroup.PUT("/password", userController.ChangePassword) // 修改密码
+            }
+        }
 
-			// ====== 分类模块公开接口 ======
-			public.GET("/category/list", categoryController.List) // 分类列表：GET /api/v1/category/list
+        // ========== 文章相关路由 ==========
+        articleGroup := apiV1.Group("/article")
+        {
+            // 公开接口
+            articleGroup.GET("/list", articleController.GetArticleList)     // 文章列表（分页+搜索）
+            articleGroup.GET("/:id", articleController.GetArticleDetail)    // 文章详情
 
-			// ====== 文章模块公开接口 ======
-			public.GET("/article/list", articleController.List)   // 文章列表：GET /api/v1/article/list
-			public.GET("/article/:id", articleController.GetDetail) // 文章详情：GET /api/v1/article/123
-		}
+            // 需登录接口
+            articleAuthGroup := articleGroup.Group("/")
+            articleAuthGroup.Use(middleware.JWTMiddleware())
+            {
+                articleAuthGroup.POST("/", articleController.PublishArticle)   // 发布文章
+                articleAuthGroup.PUT("/:id", articleController.UpdateArticle)  // 编辑文章
+                articleAuthGroup.DELETE("/:id", articleController.DeleteArticle) // 删除文章
+            }
+        }
 
-		// 4.2 私有接口（需登录，JWT校验）
-		private := apiV1.Group("")
-		private.Use(middleware.JWTMiddleware()) // JWT中间件：校验token，解析userID到上下文
-		{
-			// ====== 用户模块私有接口 ======
-			private.GET("/user/info", userController.GetInfo)         // 获取当前用户信息：GET /api/v1/user/info
-			private.PUT("/user/password", userController.ChangePassword) // 修改密码：PUT /api/v1/user/password
+        // ========== 分类相关路由 ==========
+        categoryGroup := apiV1.Group("/category")
+        {
+            // 公开接口
+            categoryGroup.GET("/list", categoryController.GetCategoryList) // 分类列表
 
-			// ====== 文章模块私有接口 ======
-			private.POST("/article", articleController.Create)       // 发布文章：POST /api/v1/article
-			private.PUT("/article/:id", articleController.Update)    // 编辑文章：PUT /api/v1/article/123
-			private.DELETE("/article/:id", articleController.Delete) // 删除文章：DELETE /api/v1/article/123
-		}
+            // 需登录接口
+            categoryAuthGroup := categoryGroup.Group("/")
+            categoryAuthGroup.Use(middleware.JWTMiddleware())
+            {
+                categoryAuthGroup.POST("/", categoryController.CreateCategory) // 创建分类
+                categoryAuthGroup.PUT("/:id", categoryController.UpdateCategory) // 编辑分类
+                categoryAuthGroup.DELETE("/:id", categoryController.DeleteCategory) // 删除分类
+            }
+        }
+    }
 
-		// 4.3 管理员接口（需JWT+管理员权限，可选扩展）
-		admin := private.Group("")
-		admin.Use(middleware.AdminMiddleware()) // 管理员权限校验
-		{
-			// 示例：管理员可删除任意文章（扩展用）
-			// admin.DELETE("/admin/article/:id", articleController.AdminDelete)
-		}
-	}
+    // 5. 404路由（兜底）
+    r.NoRoute(func(c *gin.Context) {
+        c.JSON(404, gin.H{
+            "code": 404,
+            "msg":  "接口不存在",
+            "data": nil,
+        })
+    })
 
-	// 5. 404兜底处理（可选：返回自定义404响应）
-	r.NoRoute(func(c *gin.Context) {
-		c.JSON(404, gin.H{
-			"code": 404,
-			"msg":  "接口不存在：" + c.Request.Method + " " + c.Request.URL.Path,
-		})
-	})
-
-	return r
+    return r
 }

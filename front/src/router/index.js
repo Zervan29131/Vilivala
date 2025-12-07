@@ -1,79 +1,85 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import Home from '../views/Home.vue'
+import Login from '../views/Login.vue'
+import Register from '../views/Register.vue'
+import ArticleDetail from '../views/ArticleDetail.vue'
+import PublishArticle from '../views/PublishArticle.vue'
 
-// 导入页面组件
-const Login = () => import('@/pages/auth/Login.vue')
-const Register = () => import('@/pages/auth/Register.vue')
-const Home = () => import('@/pages/home/Index.vue')
-const ArticleDetail = () => import('@/pages/article/Detail.vue')
-const ArticleEdit = () => import('@/pages/article/Edit.vue')
-const Profile = () => import('@/pages/user/Profile.vue')
+// 路由守卫：未登录拦截（仅拦截需要登录的页面）
+const requireAuth = (to, from, next) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    next()
+  } else {
+    // 未登录跳转到登录页，记录来源页
+    next({ path: '/login', query: { redirect: to.fullPath } })
+  }
+}
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home,
+    meta: { title: '首页 - 博客系统' }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: { title: '登录 - 博客系统' },
+    // 已登录时，访问登录页跳首页
+    beforeEnter: (to, from, next) => {
+      if (localStorage.getItem('token')) {
+        next('/')
+      } else {
+        next()
+      }
+    }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register,
+    meta: { title: '注册 - 博客系统' },
+    // 已登录时，访问注册页跳首页
+    beforeEnter: (to, from, next) => {
+      if (localStorage.getItem('token')) {
+        next('/')
+      } else {
+        next()
+      }
+    }
+  },
+  {
+    path: '/article/:id',
+    name: 'ArticleDetail',
+    component: ArticleDetail,
+    meta: { title: '文章详情 - 博客系统' }
+  },
+  {
+    path: '/publish',
+    name: 'PublishArticle',
+    component: PublishArticle,
+    meta: { title: '发布文章 - 博客系统', requiresAuth: true },
+    beforeEnter: requireAuth // 需要登录才能访问
+  },
+  // 404路由（必须放最后）
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
+  }
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: Home,
-      meta: { title: '首页' }
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: Login,
-      meta: { title: '登录' }
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: Register,
-      meta: { title: '注册' }
-    },
-    {
-      path: '/article/:id',
-      name: 'articleDetail',
-      component: ArticleDetail,
-      meta: { title: '文章详情' }
-    },
-    {
-      path: '/article/edit',
-      name: 'articleEdit',
-      component: ArticleEdit,
-      meta: { title: '发布文章', requireAuth: true } // 需要登录
-    },
-    {
-      path: '/article/edit/:id',
-      name: 'articleEdit',
-      component: ArticleEdit,
-      meta: { title: '编辑文章', requireAuth: true }
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: Profile,
-      meta: { title: '个人中心', requireAuth: true }
-    },
-    // 404页面
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/'
-    }
-  ]
+  routes
 })
 
-// 路由守卫：验证登录状态
+// 全局路由守卫：设置页面标题
 router.beforeEach((to, from, next) => {
-  // 设置页面标题
-  document.title = to.meta.title || '我的博客'
-  
-  const userStore = useUserStore()
-  // 需要登录的页面，检查令牌
-  if (to.meta.requireAuth && !userStore.token) {
-    next('/login') // 未登录跳转到登录页
-  } else {
-    next()
-  }
+  document.title = to.meta.title || '博客系统'
+  next()
 })
 
 export default router

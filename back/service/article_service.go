@@ -1,108 +1,90 @@
-// service/article_service.go
 package service
 
 import (
 	"back/model"
 	"back/repository"
-	"errors"
 
 	"gorm.io/gorm"
 )
 
+// ArticleService 文章服务层
 type ArticleService struct {
-	articleRepo  *repository.ArticleRepository
-	categoryRepo *repository.CategoryRepository
+	articleRepo *repository.ArticleRepository
 }
 
-func NewArticleService(articleRepo *repository.ArticleRepository, categoryRepo *repository.CategoryRepository) *ArticleService {
+// NewArticleService 构造函数
+func NewArticleService(articleRepo *repository.ArticleRepository) *ArticleService {
 	return &ArticleService{
-		articleRepo:  articleRepo,
-		categoryRepo: categoryRepo,
+		articleRepo: articleRepo,
 	}
 }
 
-// List 分页查询文章
-func (s *ArticleService) List(page, size int, keyword string) ([]model.Article, int64, error) {
-	return s.articleRepo.List(page, size, keyword)
-}
-
-// GetDetail 获取文章详情
-func (s *ArticleService) GetDetail(id uint) (*model.Article, error) {
-	return s.articleRepo.GetByID(id)
-}
-
-// Create 发布文章
-func (s *ArticleService) Create(article *model.Article) error {
-	_, err := s.categoryRepo.GetByID(article.CategoryID)
+// GetArticleList 获取文章列表
+func (s *ArticleService) GetArticleList(page, size int, keyword string) ([]*model.Article, int64, string) {
+	articles, total, err := s.articleRepo.GetList(page, size, keyword)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("分类不存在")
-		}
-		return err
+		return nil, 0, "获取文章列表失败：" + err.Error()
 	}
-	return s.articleRepo.Create(article)
+	return articles, total, "success"
 }
 
-// Update 编辑文章（核心：接收ID和DTO，不操作结构体ID）
-func (s *ArticleService) Update(articleID uint, userID uint, updateDTO interface{}) error {
-	// 1. 查询文章是否存在
-	existArticle, err := s.articleRepo.GetByID(articleID)
+// GetArticleDetail 获取文章详情
+func (s *ArticleService) GetArticleDetail(id uint) (*model.Article, string) {
+	article, err := s.articleRepo.GetByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("文章不存在")
+		if err == gorm.ErrRecordNotFound {
+			return nil, "文章不存在"
 		}
-		return err
+		return nil, "获取文章详情失败：" + err.Error()
 	}
-
-	// 2. 权限校验
-	if existArticle.UserID != userID {
-		return errors.New("无权限修改该文章")
-	}
-
-	// 3. 解析更新DTO
-	req := updateDTO.(struct {
-		Title      string `json:"title"`
-		Content    string `json:"content"`
-		CoverImg   string `json:"cover_img"`
-		CategoryID uint   `json:"category_id"`
-		IsPublish  bool   `json:"is_publish"`
-	})
-
-	// 4. 校验分类
-	_, err = s.categoryRepo.GetByID(req.CategoryID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("分类不存在")
-		}
-		return err
-	}
-
-	// 5. 构造更新数据（Map形式，无ID）
-	updateData := map[string]interface{}{
-		"title":        req.Title,
-		"content":      req.Content,
-		"cover_img":    req.CoverImg,
-		"category_id":  req.CategoryID,
-		"is_publish":   req.IsPublish,
-	}
-
-	// 6. 调用Repo更新（通过ID条件更新，无结构体ID）
-	return s.articleRepo.UpdateByID(articleID, updateData)
+	// 阅读量+1
+	s.articleRepo.IncrViewCount(id)
+	return article, "success"
 }
 
-// Delete 删除文章
-func (s *ArticleService) Delete(id, userID uint) error {
+// PublishArticle 发布文章
+func (s *ArticleService) PublishArticle(article *model.Article) (bool, string) {
+	err := s.articleRepo.Create(article)
+	if err != nil {
+		return false, "发布文章失败：" + err.Error()
+	}
+	return true, "发布文章成功"
+}
+
+// UpdateArticle 编辑文章
+func (s *ArticleService) UpdateArticle(id, userId uint, article *model.Article) (bool, string) {
+	// 检查文章是否属于当前用户
 	existArticle, err := s.articleRepo.GetByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("文章不存在")
-		}
-		return err
+		return false, "文章不存在"
+	}
+	if existArticle.UserID != userId {
+		return false, "无权编辑他人文章"
 	}
 
-	if existArticle.UserID != userID {
-		return errors.New("无权限删除该文章")
+	// 更新文章
+	err = s.articleRepo.Update(id, article)
+	if err != nil {
+		return false, "编辑文章失败：" + err.Error()
+	}
+	return true, "编辑文章成功"
+}
+
+// DeleteArticle 删除文章
+func (s *ArticleService) DeleteArticle(id, userId uint) (bool, string) {
+	// 检查文章归属
+	existArticle, err := s.articleRepo.GetByID(id)
+	if err != nil {
+		return false, "文章不存在"
+	}
+	if existArticle.UserID != userId {
+		return false, "无权删除他人文章"
 	}
 
-	return s.articleRepo.Delete(id, userID)
+	// 删除文章
+	err = s.articleRepo.Delete(id)
+	if err != nil {
+		return false, "删除文章失败：" + err.Error()
+	}
+	return true, "删除文章成功"
 }

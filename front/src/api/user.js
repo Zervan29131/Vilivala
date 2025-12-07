@@ -1,36 +1,30 @@
-import service from './index'
+import axios from 'axios'
 
-// 用户注册
-export const userRegister = (data) => {
-  return service({
-    url: '/v1/user/register',
-    method: 'post',
-    data
-  })
+// 请求拦截器：统一携带token
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// 登录接口
+export const login = (data) => {
+  return axios.post('/api/v1/user/login', data).then(res => res.data)
 }
 
-// 用户登录
-export const userLogin = (data) => {
-  return service({
-    url: '/v1/user/login',
-    method: 'post',
-    data
-  })
+// 注册接口
+export const register = (data) => {
+  return axios.post('/api/v1/user/register', data).then(res => res.data)
 }
 
-// 获取当前用户信息
+// 获取用户信息
 export const getUserInfo = () => {
-  return service({
-    url: '/v1/user/info',
-    method: 'get'
-  })
+  return axios.get('/api/v1/user/info').then(res => res.data)
 }
 
 // 修改密码
 export const changePassword = (data) => {
-  return service({
-    url: '/v1/user/password',
-    method: 'put',
-    data
-  })
+  return axios.put('/api/v1/user/password', data).then(res => res.data)
 }

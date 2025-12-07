@@ -1,11 +1,10 @@
 package controller
 
 import (
-	"net/http"
-	"strconv"
-
 	"back/model"
 	"back/service"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,221 +14,226 @@ type ArticleController struct {
 	articleService *service.ArticleService
 }
 
-// NewArticleController 创建控制器实例
-func NewArticleController(s *service.ArticleService) *ArticleController {
-	return &ArticleController{articleService: s}
+// NewArticleController 构造函数（依赖注入ArticleService）
+func NewArticleController(articleService *service.ArticleService) *ArticleController {
+	return &ArticleController{
+		articleService: articleService,
+	}
 }
 
-// List 分页查询文章列表
-func (c *ArticleController) List(ctx *gin.Context) {
+// ========== 实现路由中调用的所有方法 ==========
+
+// GetArticleList 获取文章列表（分页+搜索）
+// 解决：router中调用的GetArticleList方法，此处必须首字母大写且名称完全一致
+func (c *ArticleController) GetArticleList(ctx *gin.Context) {
+	// 1. 获取分页/搜索参数
 	pageStr := ctx.DefaultQuery("page", "1")
 	sizeStr := ctx.DefaultQuery("size", "10")
 	keyword := ctx.Query("keyword")
 
+	// 2. 转换参数类型
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
 		page = 1
 	}
-
 	size, err := strconv.Atoi(sizeStr)
-	if err != nil || size < 1 || size > 50 {
+	if err != nil || size < 1 {
 		size = 10
 	}
 
-	articles, total, err := c.articleService.List(page, size, keyword)
-	if err != nil {
+	// 3. 调用Service层获取列表
+	articles, total, msg := c.articleService.GetArticleList(page, size, keyword)
+	if articles == nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 500,
-			"msg":  "获取文章列表失败：" + err.Error(),
+			"msg":  msg,
+			"data": nil,
 		})
 		return
 	}
 
+	// 4. 返回数据
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
-		"msg":  "获取成功",
+		"msg":  "获取文章列表成功",
 		"data": gin.H{
 			"list":  articles,
 			"total": total,
+			"page":  page,
+			"size":  size,
 		},
 	})
 }
 
-// GetDetail 获取文章详情
-func (c *ArticleController) GetDetail(ctx *gin.Context) {
+// GetArticleDetail 获取文章详情
+func (c *ArticleController) GetArticleDetail(ctx *gin.Context) {
+	// 1. 获取文章ID
 	idStr := ctx.Param("id")
-	articleID, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
-			"msg":  "无效的文章ID：" + err.Error(),
+			"msg":  "文章ID格式错误",
+			"data": nil,
 		})
 		return
 	}
 
-	article, err := c.articleService.GetDetail(uint(articleID))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code": 500,
-			"msg":  "获取文章详情失败：" + err.Error(),
+	// 2. 调用Service层获取详情
+	article, msg := c.articleService.GetArticleDetail(uint(id))
+	if article == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"code": 404,
+			"msg":  msg,
+			"data": nil,
 		})
 		return
 	}
 
+	// 3. 返回数据
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
-		"msg":  "获取成功",
+		"msg":  "获取文章详情成功",
 		"data": article,
 	})
 }
 
-// Create 发布文章
-func (c *ArticleController) Create(ctx *gin.Context) {
-	// 定义请求结构体（无ID）
-	type CreateReq struct {
-		Title      string `json:"title" binding:"required,max=100"`
+// PublishArticle 发布文章
+func (c *ArticleController) PublishArticle(ctx *gin.Context) {
+	// 1. 定义请求参数结构体
+	type PublishRequest struct {
+		Title      string `json:"title" binding:"required,min=1,max=100"`
 		Content    string `json:"content" binding:"required"`
-		CoverImg   string `json:"cover_img"`
 		CategoryID uint   `json:"category_id" binding:"required"`
 		IsPublish  bool   `json:"is_publish" default:"true"`
 	}
 
-	var req CreateReq
+	// 2. 绑定参数
+	var req PublishRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
 			"msg":  "参数错误：" + err.Error(),
+			"data": nil,
 		})
 		return
 	}
 
-	// 获取当前用户ID
-	userID, exists := ctx.Get("userID")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code": 401,
-			"msg":  "请先登录",
-		})
-		return
-	}
+	// 3. 获取当前登录用户ID（从JWT中间件存入的上下文）
+	userId, _ := ctx.Get("userID")
 
-	// 构造文章对象（绝对无ID字段）
+	// 4. 构造文章模型
 	article := &model.Article{
 		Title:      req.Title,
 		Content:    req.Content,
-		CoverImg:   req.CoverImg,
 		CategoryID: req.CategoryID,
-		UserID:     userID.(uint),
+		UserID:     userId.(uint),
 		IsPublish:  req.IsPublish,
 	}
 
-	if err := c.articleService.Create(article); err != nil {
+	// 5. 调用Service层发布
+	success, msg := c.articleService.PublishArticle(article)
+	if success {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": 200,
+			"msg":  msg,
+			"data": nil,
+		})
+	} else {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 500,
-			"msg":  "发布文章失败：" + err.Error(),
+			"msg":  msg,
+			"data": nil,
 		})
-		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg":  "发布成功",
-	})
 }
 
-// Update 编辑文章
-func (c *ArticleController) Update(ctx *gin.Context) {
-	// 1. 获取文章ID（仅作为参数传递，不赋值给结构体）
+// UpdateArticle 编辑文章
+func (c *ArticleController) UpdateArticle(ctx *gin.Context) {
+	// 1. 获取文章ID
 	idStr := ctx.Param("id")
-	articleID, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
-			"msg":  "无效的文章ID：" + err.Error(),
+			"msg":  "文章ID格式错误",
+			"data": nil,
 		})
 		return
 	}
 
-	// 2. 定义更新请求（无ID）
-	type UpdateReq struct {
-		Title      string `json:"title" binding:"required,max=100"`
+	// 2. 绑定更新参数
+	type UpdateRequest struct {
+		Title      string `json:"title" binding:"required,min=1,max=100"`
 		Content    string `json:"content" binding:"required"`
-		CoverImg   string `json:"cover_img"`
 		CategoryID uint   `json:"category_id" binding:"required"`
-		IsPublish  bool   `json:"is_publish" default:"true"`
+		IsPublish  bool   `json:"is_publish"`
 	}
-
-	var req UpdateReq
+	var req UpdateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
 			"msg":  "参数错误：" + err.Error(),
+			"data": nil,
 		})
 		return
 	}
 
 	// 3. 获取当前用户ID
-	userID, exists := ctx.Get("userID")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code": 401,
-			"msg":  "请先登录",
-		})
-		return
-	}
+	userId, _ := ctx.Get("userID")
 
-	// 4. 调用服务层（传递ID和更新数据，无结构体ID赋值）
-	err = c.articleService.Update(
-		uint(articleID),
-		userID.(uint),
-		req,
-	)
-	if err != nil {
+	// 4. 调用Service层更新
+	success, msg := c.articleService.UpdateArticle(uint(id), userId.(uint), &model.Article{
+		Title:      req.Title,
+		Content:    req.Content,
+		CategoryID: req.CategoryID,
+		IsPublish:  req.IsPublish,
+	})
+	if success {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": 200,
+			"msg":  msg,
+			"data": nil,
+		})
+	} else {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 500,
-			"msg":  "编辑文章失败：" + err.Error(),
+			"msg":  msg,
+			"data": nil,
 		})
-		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg":  "编辑成功",
-	})
 }
 
-// Delete 删除文章
-func (c *ArticleController) Delete(ctx *gin.Context) {
+// DeleteArticle 删除文章
+func (c *ArticleController) DeleteArticle(ctx *gin.Context) {
+	// 1. 获取文章ID
 	idStr := ctx.Param("id")
-	articleID, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
-			"msg":  "无效的文章ID：" + err.Error(),
+			"msg":  "文章ID格式错误",
+			"data": nil,
 		})
 		return
 	}
 
-	userID, exists := ctx.Get("userID")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code": 401,
-			"msg":  "请先登录",
-		})
-		return
-	}
+	// 2. 获取当前用户ID
+	userId, _ := ctx.Get("userID")
 
-	err = c.articleService.Delete(uint(articleID), userID.(uint))
-	if err != nil {
+	// 3. 调用Service层删除
+	success, msg := c.articleService.DeleteArticle(uint(id), userId.(uint))
+	if success {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": 200,
+			"msg":  msg,
+			"data": nil,
+		})
+	} else {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": 500,
-			"msg":  "删除文章失败：" + err.Error(),
+			"msg":  msg,
+			"data": nil,
 		})
-		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg":  "删除成功",
-	})
 }
