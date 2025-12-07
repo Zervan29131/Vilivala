@@ -40,6 +40,7 @@ func (r *UserRepository) GetUserByUsername(username string) (*model.User, error)
 // 通过ID查用户
 func (r *UserRepository) GetUserByID(userID uint) (*model.User, error) {
 	var user model.User
+<<<<<<< HEAD
 	err := r.db.Where("id = ?", userID).First(&user).Error
 	return &user, err
 }
@@ -47,4 +48,11 @@ func (r *UserRepository) GetUserByID(userID uint) (*model.User, error) {
 // 更新密码
 func (r *UserRepository) UpdateUserPassword(userID uint, newPwd string) error {
 	return r.db.Model(&model.User{}).Where("id = ?", userID).Update("password", newPwd).Error
+=======
+	err := r.db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+>>>>>>> parent of 48535c3 (add)
 }

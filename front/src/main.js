@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+<<<<<<< HEAD
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -17,3 +18,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 app.use(router)
 app.mount('#app')
+=======
+import './style.css'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+>>>>>>> parent of 48535c3 (add)

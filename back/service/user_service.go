@@ -43,6 +43,7 @@ func (s *UserService) Register(username, password, avatar string) (bool, string)
 	if err := s.userRepo.CreateUser(user); err != nil {
 		return false, "注册失败：" + err.Error()
 	}
+<<<<<<< HEAD
 	return true, "注册成功"
 }
 
@@ -99,4 +100,16 @@ func (s *UserService) ChangePassword(userID uint, oldPwd, newPwd string) (bool, 
 		return false, "修改密码失败：" + err.Error()
 	}
 	return true, "修改密码成功"
+=======
+
+	// 4. 构造返回的用户信息（隐藏敏感字段）
+	userInfo = map[string]interface{}{
+		"id":       user.ID,
+		"username": user.Username,
+		"avatar":   user.Avatar,
+		"role":     user.Role,
+	}
+
+	return token, userInfo, nil
+>>>>>>> parent of 48535c3 (add)
 }

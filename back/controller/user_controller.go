@@ -1,6 +1,12 @@
 package controller
 
 import (
+<<<<<<< HEAD
+=======
+	"net/http"
+
+	"back/model"
+>>>>>>> parent of 48535c3 (add)
 	"back/service"
 	"net/http"
 
@@ -78,6 +84,7 @@ type LoginRequest struct {
 
 // 6. 登录接口（补充完整逻辑，无语法错误）
 func (c *UserController) Login(ctx *gin.Context) {
+<<<<<<< HEAD
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -132,4 +139,32 @@ func (c *UserController) GetUserInfo(ctx *gin.Context) {
 			"data": nil,
 		})
 	}
+=======
+	// 1. 解析参数
+	var req struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"code": 400, "msg": "参数错误：" + err.Error()})
+		return
+	}
+
+	// 2. 调用业务层
+	token, userInfo, err := c.userService.Login(req.Username, req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": err.Error()})
+		return
+	}
+
+	// 3. 返回响应（令牌+用户信息）
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "登录成功",
+		"data": gin.H{
+			"token": token,
+			"user":  userInfo,
+		},
+	})
+>>>>>>> parent of 48535c3 (add)
 }
