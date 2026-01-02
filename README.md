@@ -1,144 +1,507 @@
-## 数据库模型(Database Design) 
+# WANLI 博客系统
+
+## 项目介绍
+
+基于vue3和gin框架开发的前后端分离个人博客系统，包含md格式的文本编辑展示，点赞评论收藏，新闻热点，匿名聊天室，文章搜索等功能。
+
+---
+
+## 功能展示
 
 
+[B 站视频]()
+
+图片展示：
+
+![a1](imgs/boke.png)
+
+![a2](imgs/a14.png)
+
+![a2](imgs/a13.png)
+
+![a2](imgs/a12.png)
 
 
+---
 
+## 技术介绍
 
+#### 开发环境
 
+| 开发工具        |功能描述			
+|-------------|--|
+| GoLand      |后端开发		
+| Vscode      |前端开发			
+| Apifox      |API测试			
+| Ubuntu      |依赖软件运行
+| xftp、xsheel |Linux 远程工具
 
-## API 接口定义
+| 开发环境                    | 版本     |
+|-------------------------|--------|
+| GoLang                  | 1.22.3 |
+| nodejs                  | 20.14.0 |
+| MySQL                   | 8.0    |
+| Elasticsearch、kibana、ik | 7.10.1 |
+| Redis                   | latest |
 
+---
 
+#### 技术栈
 
+> 这里只写一些主流的通用技术，详细第三方库：前端参考 package.json 文件，后端参考 go.mod 文件
 
+|功能描述|前端|官方地址|
+|--|--|--|
+|Vue3框架|vuejs|https://cn.vuejs.org/
+|Vue组件|ant-design-vue|https://next.antdv.com/docs/vue/introduce-cn/
+|Mark Down|md-editor-v3|https://imzbf.github.io/md-editor-v3/
+|状态管理工具|pinia|https://pinia.vuejs.org/|
+|构建工具|vite|https://cn.vitejs.dev/
+|可视化图表库|echarts|https://echarts.apache.org/zh/index.html|
 
+|功能描述|后端|官方地址|
+|--|--|--|
+|GO语言|golang|https://github.com/golang/go
+|WEB框架|gin|https://gin-gonic.com/zh-cn/docs/
+|API文档|swaggo|https://github.com/swaggo
+|ORM 库|gorm|https://github.com/go-gorm/gorm
+|日志库|logrus|https://github.com/sirupsen/logrus
+---
 
+## 本地运行
 
+> 自行安装 Golang、Node、MySQL、Redis 、Elasticsearch 环境
+> Golang 安装参考官方文档
+> Node 建议安装使用 `https://nodejs.org/zh-cn` 的长期维护版
+> MySQL、Redis、Elasticsearch 建议使用 Docker 运行
 
+后端项目运行：
 
+```powershell
+# 1、启动MySQL、Redis、Elasticsearch,其中mysql需要新建一个库
+# 2、修改项目运行的配置文件 settings.yaml
 
+# 3、初始化运行环境
+go mod tidy 				# 下载当前项目所依赖的包
+go run main.go -db 			# mysql建表
+go run main.go -es create	# elasticsearch建索引
 
-## 二、三大核心技能梳理
-### 1. 大模型微调能力（高薪必备技能）
-主流技术路线
-  清华智谱智谱系：基于PQ零v二的微调方案；
-  主流Laura系：包括Lauraq、Laura adapt等多种Laura变体微调方案。
-常用工具：
-  底层工具：Deepspeed（偏向底层技术实现，支撑微调的基础架构）；
-  应用层工具：llamafactor（更贴近实际应用开发，降低微调技术门槛）。
+# 4、mysql插入菜单表数据
+INSERT INTO gvb.menu_models (id, created_at, updated_at, title, path, slogan, abstract, abstract_time, banner_time, sort) VALUES (1, NOW(), NOW(), '首页', '/', '众神眷恋的幻想乡', '天寒地冻路远马亡又何妨', 5, 5, 1);
+INSERT INTO gvb.menu_models (id, created_at, updated_at, title, path, slogan, abstract, abstract_time, banner_time, sort) VALUES (2, NOW(), NOW(), '新闻', '/news', '新闻三分钟，知晓天下事', '震惊!男人看了会沉默，女人看了会流泪!不转不是中国人!',  5, 5, 2);
+INSERT INTO gvb.menu_models (id, created_at, updated_at, title, path, slogan, abstract, abstract_time, banner_time, sort) VALUES (3, NOW(), NOW(), '文章搜索', '/search', '文章搜索', '文章搜索',  5, 5, 3);
+INSERT INTO gvb.menu_models (id, created_at, updated_at, title, path, slogan, abstract, abstract_time, banner_time, sort) VALUES (4, NOW(), NOW(),'聊天室', '/chat_group', '聊天室', '聊天室',  5, 5, 4);
 
-用llama-factory微调这大一的学学就会吧
-千万不要微调，rag性价比高
+# 5、创建第一个用户，后续可在前端创建或注册
+go run main.go -u admin		# 管理员
+go run main.go -u user		# 普通用户
 
+# 6、启动项目
+go run main.go
+```
 
-### 2. Agent开发能力（智能体构建核心）
-核心框架：必须基于Longchain、Longgraph框架开发，明确排除“cos和比赛”类非实用开发方向。
-关键配套系统：开发的智能体需伴随R&J系统（智能体的知识与逻辑支撑）：
-  初级R&J系统：包含向量数据库（实现基础知识检索与存储）；
-  高级R&J系统：引入知识图谱（提升智能体的知识关联与深度推理能力，是提升工程师技术价值的关键）。
+前端项目运行：
 
+```powershell
+# 下载当前项目所依赖的包
+npm insatll
+# 启动项目
+npm run dev
+```
 
-### 3. 传统主流AI开发技能（工程化基本功）
-核心内容：涵盖“小模型开发部署”与“大模型推理部署”两大方向：
-  小模型能力：基于papos框架完成小模型的训练与部署（工业界实际应用的基础，是工程师的核心基本功）；
-  大模型推理部署：技术门槛较低（类比“运煤”，依赖固定命令），主流工具包括vllm、st浪等，核心不在于工具本身，而在于“小模型与大模型的协同应用”——即如何将Burtt五等小模型合理应用于工业场景。
+---
 
+## 线上部署（Linux）| 阿里云服务器 | 七牛云存储
 
+本项目线上部署目录结构如下，必需的目录及文件：
 
-## 二、17种RAG优化方法详解
-### （一）文档切分相关方法（解决“怎么切文档”问题）
-#### 1. 简单RAG
-核心逻辑：按固定字符或TOKEN数切割文本（如每40字一切）。
-示例：文本“苹果公司于2007年发布了第一代iPhone，相比之下，香蕉是一种富含钾的水果”按固定字数切割，可能将“彻底改变了智能”与“手机行业”拆分，导致语义断裂。
-优点：实现简单；缺点：切割死板，易造成语义断裂、上下文丢失。
+```bash
+  gvb
+    └─deploy
+        └─gvb
+            ├─elasticsearch
+            │  ├─config
+            │  ├─data
+            │  └─plugins			
+            │  	  └─ik    # 使用ik分词器，下载7.12.0版本，然后解压重命名为ik，上传到linux挂载的plugins目录下
+            ├─gvb_server  # 服务端代码，这个不用容器启动 直接 ./main 启动即可
+            │  ├─docs
+            │  ├─uploads
+            │  ├─main(二进制文件)
+            │  └─settings.yml(配置文件)
+            ├─gvb_web
+            │  └─dist
+            ├─mysql
+            │  └─data
+            ├─nginx
+            │  ├─conf
+            │  ├─html
+            │  └─logs
+            └─redis
+                └─data
+```
 
-#### 2. 语义切割
-核心逻辑：按句子拆分文本，计算相邻句子相似度，相似度骤降处即为切割点，确保每个块语义完整。
-示例：上述文本按句子拆分后，因“iPhone”与后续内容相似度下降，最终切成5个语义完整的块。
-优点：每个块为完整意思单元，语义连贯；缺点：召回率较低。
+---
 
-#### 3. 上下文分块标题
-核心逻辑：分块时为每个块添加对应章节标题，再对“标题+内容”进行嵌入处理。
-示例：苹果手机相关内容块添加标题“苹果手机的历史和特性”，香蕉相关内容块添加标题“香蕉的营养和用途”。
-优点：避免不同主题块因存在相同词汇而混淆，提升检索精准度。
+#### 安装Docker和docker-compose
 
+> 只需要提前安装好docker运行环境，可自行上网搜索资料安装
 
-### （二）检索精准度优化方法（解决“怎么查得准”问题）
-#### 4. 上下文增强检索
-核心逻辑：检索到相关块后，自动携带其前后相邻的“邻居块”，一并提交给大模型。
-示例：用户询问“iPhone有什么特点”，检索到核心相关的块二后，同时携带描述苹果手机历史的块一和描述电池续航的块三。
-优点：保留局部上下文，避免信息碎片化。
+安装地址：[https://developer.aliyun.com/article/708974
 
-#### 5. 文本增强
-核心逻辑：对每个文本块，通过大模型生成若干对应问题，将“文本块+生成的问题”一同向量化存储，检索时可匹配原文或生成的问题。
-示例：针对“第一代iPhone发布”相关块，生成“第一代iPhone什么时候发布的？”“iPhone有物理键盘吗？”等问题，用户提问时可通过问题匹配找到目标块。
-优点：大幅提升检索召回率。
+---
 
-#### 6. 查询转换
-核心逻辑：通过查询重写、回退提示、子查询分解三种方式，优化用户存在歧义的问题，使其更精准。
-示例：用户提问“iphone有没有物理键盘”，重写为“第一代iphone是不是配备了物理键盘”，提升大模型理解度与检索精准度。
-优点：减少问题歧义，让检索目标更明确，答案更准确。
+#### 依赖软件准备
 
-#### 7. 重排
-核心逻辑：分“粗筛+精筛”两步检索：第一步用语义/相似度检索快速召回20个相关块；第二步用rerank模型逐个打分，仅保留分数最高的Top5块。
-示例：检索苹果手机相关信息时，粗筛召回包含苹果、香蕉、机械键盘的3个块，经rerank模型打分后，仅保留相似度9分的苹果相关块。
-优点：筛选出最相关的核心信息，提升检索效率与精准度。
+> 后端Golang中的settings.yaml文件，请自行修改你的配置内容。
+>
+> 在服务器上使用docker-compose启动所有容器：mysql、redis、elasticsearch、kibana、nginx
 
-#### 8. RSE（关联段落的提取）
-核心逻辑：检索到多个相关块后，判断其在原文中是否连续，若连续则拼接成完整段落返回。
-示例：检索到块a（苹果手机发布）、块b（苹果手机特性）、块c（苹果手机续航），因三者连续，拼接后整体返回；若块b为香蕉相关内容，则仅返回块a和块c。
-优点：提升RAG系统的上下文质量，避免零散信息干扰。
+docker-compose.yml 和 .env 文件放在部署服务器的 deploy 目录下，cd 到deploy启动docker-compose，以下是各个文件的内容。
 
-#### 9. 融合RAG
-核心逻辑：融合“关键字检索”与“语义检索”两种方式，对两种检索结果打分、加权合并后排序。
-优点：结合两种检索的优势，提升检索的准确性与可靠性。
+**1、docker-compose.yml 文件**
 
-#### 10. Graph RAG
-核心逻辑：引入知识图谱，将文档转化为图谱结构，用户提问时通过查找图谱中的相关节点获取信息。
-优点：补充文档中的关联关系，让答案更完整、全面。
+```yaml
+version: "3"
 
-#### 11. 层次RAG
-核心逻辑：先为每个块/每页生成摘要，用户提问时先锁定对应的章节（基于摘要），再在章节内查找细节内容。
-类比：类似查字典——先通过拼音/偏旁定位章节，再查询具体汉字细节。
-优点：大幅提高查询效率，避免无差别遍历所有文档。
+networks:
+  gvb-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET}
 
-#### 12. Hyde RAG
-核心逻辑：“先猜答案再找证据”——用户提问后，先用模型生成假设答案，再以假设答案为检索依据，在知识库中匹配最相似的真实文本块，最终生成响应。
-优点：假设答案语义更丰富，与真实文档的匹配度更高，检索更精准。
+services:
+  gvb-redis:
+    image: redis:7.0.8-alpine
+    container_name: gvb-redis
+    volumes:
+      - ${GVB_DATA_DIRECTORY}/redis/data:/data
+    ports:
+      - ${REDIS_PORT}:6379 # 自定义的是暴露出去的端口, Redis 容器内运行固定为 6379
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    networks:
+      gvb-network:
+        ipv4_address: ${REDIS_HOST}
 
-#### 13. 纠错RAG
-核心逻辑：评估检索结果质量，若本地知识库无法满足需求（如实时信息），调用网络检索工具补充。
-示例：查询“苹果最新价格”时，本地文档无相关数据，检索质量评估分＜0.3分，自动触发网络检索；若评估分≥0.85分（如查询第一代iPhone发布时间），则直接使用本地文档。
-优点：突破本地知识库限制，覆盖实时、稀缺信息，弥补模型知识短板。
+  gvb-mysql:
+    image: mysql:8.0
+    container_name: gvb-mysql
+    volumes:
+      - ${GVB_DATA_DIRECTORY}/mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} # root 账号的密码
+      - MYSQL_DATABASE=${MYSQL_DATABASE} # 初始化的数据库
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Shanghai
+    command: --max_connections=1000
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+    ports:
+      - ${MYSQL_PORT}:3306 # 自定义的是暴露出去的端口, MySQL 容器内运行固定为 3306
+    networks:
+      gvb-network:
+        ipv4_address: ${MYSQL_HOST}
 
+  gvb-elasticsearch:
+    image: elasticsearch:7.12.0
+    container_name: gvb-elasticsearch
+    volumes:
+      - ${GVB_DATA_DIRECTORY}/elasticsearch/data:/usr/share/elasticsearch/data
+      - ${GVB_DATA_DIRECTORY}/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${GVB_DATA_DIRECTORY}/elasticsearch/plugins:/usr/share/elasticsearch/plugins
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms128m -Xmx256m
+    ports:
+      - ${ELASTICSEARCH_PORT01}:9200 # 自定义的是暴露出去的端口, elasticsearch 容器内运行固定为 9200和9300
+      - ${ELASTICSEARCH_PORT02}:9300
+    networks:
+      gvb-network:
+        ipv4_address: ${ELASTICSEARCH_HOST}
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "chmod -R 777 /usr/share/elasticsearch/data /usr/share/elasticsearch/config /usr/share/elasticsearch/plugins && /usr/local/bin/docker-entrypoint.sh",
+      ]
 
-### （三）数据使用优化方法（解决“怎么用好数据”问题）
-#### 14. 上下文压缩
-核心逻辑：对检索到的文本块进行筛选，仅保留与问题相关的句子，删除无关内容。
-示例：检索到包含“苹果手机历史+特性”的块，用户询问“苹果手机的特点”时，仅保留“特性”相关内容，剔除“历史”信息。
-优点：减少无关信息干扰，让模型回答更精准。
+  gvb-nginx:
+    image: nginx:latest
+    container_name: gvb-nginx
+    volumes:
+      - ${GVB_DATA_DIRECTORY}/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ${GVB_DATA_DIRECTORY}/nginx/logs:/var/log/nginx
+      - ${GVB_DATA_DIRECTORY}/gvb_web:/usr/share/nginx/html # 修改路径为 nginx 默认的 web 根目录
+      - ${GVB_DATA_DIRECTORY}/gvb_server:/usr/share/nginx/server # 修改路径为 nginx 默认的服务器目录
+    ports:
+      - ${NGINX_PORT}:80 # 自定义的是暴露出去的端口, nginx 容器内运行固定为 80
+    networks:
+      gvb-network:
+        ipv4_address: ${NGINX_HOST}
 
-#### 15. 反馈循环
-核心逻辑：类似“人类反馈强化学习”，通过用户对响应结果的反馈（如“有用/无用”），调整文档权重或微调嵌入，实现持续优化。
-示例：用户对“iPhone是否有物理键盘”的回答点“有用”，下次该用户提问时，对应文本块的检索优先级提升。
-优点：让RAG系统“越用越聪明”，贴合用户偏好。
+  gvb-kibana:
+    image: kibana:7.12.0
+    container_name: gvb-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://gvb-elasticsearch:9200
+    ports:
+      - ${KIBANA_PORT}:5601
+    networks:
+      gvb-network:
+        ipv4_address: ${KIBANA_HOST}
+```
 
-#### 16. 适应性RAG
-核心逻辑：先判断问题类型（事实型/分析型/观点型/上下文型），再差异化处理，同时加入多个反思点（是否需要检索、文档是否相关、回答是否有依据等）。
-示例：“iPhone有物理键盘吗？”（事实型）→ 检索知识库；“iPhone好用吗？”（观点型）→ 直接生成主观回答。
-优点：避免无需检索的问题占用知识库资源，且通过反思点提升回答可靠性。
+**2、 .env 文件（相关参数自行修改）**
 
-#### 17. 基于检索的生成
- 
-#### 18. 基于生成的检索
+```bash
+# https://docs.docker.com/compose/migrate/
+# docker-compose.yml 同目录下的 .env 文件会被加载为其环境变量
 
+# COMPOSE_PROJECT_NAME=gin-vue-blog
 
+# 数据存储的文件夹位置 (默认在当前路径生成 gvb 文件夹)
+GVB_DATA_DIRECTORY=./gvb
 
+# Redis
+REDIS_PORT=6379
+REDIS_PASSWORD=password
 
+# Kibana
+KIBANA_PORT=5601
 
-我需要一个前后端分离的，vue+gin框架的mysql的博客系统
+# MySQL
+MYSQL_PORT=3306
+MYSQL_ROOT_PASSWORD=password
+MYSQL_DATABASE=gvb_db
+MYSQL_USER=gvb
+MYSQL_PASSWORD=password
 
-帮我确定我的功能需求和总体架构
+# Elasticsearch
+ELASTICSEARCH_PORT01=9200
+ELASTICSEARCH_PORT02=9300
 
-以及我的文件夹的目录
+# Nginx
+NGINX_PORT=80
+
+# Docker Network (一般不需要变, 除非发生冲突)
+SUBNET=172.12.0.0/24
+REDIS_HOST=172.12.0.2
+MYSQL_HOST=172.12.0.3
+ELASTICSEARCH_HOST=172.12.0.4
+KIBANA_HOST=172.12.0.5
+NGINX_HOST=172.12.0.6
+```
+
+后端 settings.yml 配置文件，在目录：gvb\deploy\gvb\gvb_server 下。
+
+```yaml
+mysql:
+  host: 你的服务器地址
+  port: 3306
+  config: charset=utf8mb4&parseTime=True&loc=Local
+  db: gvb_db
+  user: root
+  password: xxx
+  log_Level: ""
+logger:
+  level: info
+  prefix: '[gvb]'
+  director: log
+  show-line: true
+  log-in-console: true
+system:
+  host: 0.0.0.0
+  port: 8080
+  env: release
+  ssl-pem: ""
+  ssl-key: ""
+site-info:
+  created_at: "2024-07-17"
+  bei_an: 等待中
+  title: 万里的个人博客
+  qq_image: /uploads/file/admin/qq_20240717101939.jpg
+  version: 1.0.1
+  email: 2597029604@qq.com
+  wechat_image: /uploads/file/admin/wechat_20240717101945.jpg
+  name: WANLI
+  job: Golang后端开发
+  addr: 北京
+  slogan: 万里
+  slogan_en: WANLI
+  web: http://bloggo.chat/
+  bilibili_url: https://space.bilibili.com/1829444123?spm_id_from=333.1007.0.0
+  gitee_url: https://gitee.com/xiwanli
+  github_url: https://github.com/xzhHas/ginblog-wanli
+qq:
+  app_id: 
+  key: 
+  redirect: http://127.0.0.1/login?flag=qq
+qiniu:
+  enable: true
+  access_key: 
+  secret_key: 
+  bucket: gvbdb
+  cdn: http://spaotwd8k.hb-bkt.clouddn.com/
+  zone: z1
+  prefix: gvb
+  size: 150
+email:
+  host: smtp.qq.com
+  port: 465
+  user: xxx@qq.com
+  password: 
+  default-from-email: xxx@qq.com
+  use_ssl: true
+  user_tls: false
+jwt:
+  secret: 9Saj0XAf8SdTYHj3lq6EOnyIrSfC5D6D
+  expires: 1
+  issuer: xiwanli
+upload:
+  size: 150
+  path: uploads/file/
+redis:
+  ip: 你的服务器地址
+  port: 6379
+  password: "xxx"
+  pool_size: 100
+es:
+  host: http://你的服务器地址
+  port: 9200
+  user: ""
+  password: ""
+```
+
+Elasticsearch 配置文件：elasticsearch.yml，在目录：gvb\deploy\gvb\elasticsearch\config 下。
+
+```powershell
+http.host: 0.0.0.0
+```
+
+nginx配置文件：nginx.conf，在目录：gvb\deploy\gvb\nginx\conf 下。
+
+```powershell
+user  root;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+    sendfile        on;
+    tcp_nopush     on;
+
+    client_max_body_size 8M; # 上传文件大小限制
+    keepalive_timeout  65;
+
+    server {
+        listen 80; # HTTP
+        server_name bloggo.chat www.bloggo.chat; # 域名
+
+        # 前端请求处理
+        location / {
+            root   /usr/share/nginx/html/dist/;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # WebSocket 请求处理
+        location /wsUrl/ {
+            rewrite ^/wsUrl/(.*)$ /$1 break;   # 长连接时间
+            proxy_pass http://你的服务器地址/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_redirect off;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host $server_name;
+            proxy_read_timeout 3600s;  # 长连接时间
+        }
+
+        # API 请求处理
+        location /api/ {
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_pass http://你的服务器地址/api/;
+        }
+
+        # 文件上传处理
+        location /uploads/ {
+            alias /usr/share/nginx/server/uploads/;
+        }
+
+        # Swagger 文档处理
+        location /swagger/ {
+            proxy_pass http://你的服务器地址/swagger/;
+        }
+    }
+}
+```
+
+---
+
+#### 应用程序准备
+
+后端项目打包生成的main文件、docs文件夹、settings.yaml、uploads文件夹复制至部署服务器的 gvb_server 目录下。
+
+```bash
+# 生成api文档
+swag init 
+
+# 后端go打包（请使用cmd打包，不然打包后的文件还可能是windows的版本）
+set GOARCH=amd64
+set GOOS=linux
+set CGO_ENABLED=0
+go build -o main 
+```
+
+前端项目打包生成的dist文件夹及其文件复制至部署服务器的 gvb_web 目录下。
+
+```bash
+# 前端npm打包
+npm run build
+```
+
+---
+
+#### 启动应用
+
+修改好各项配置
+
+```bash
+# docker compose 启动依赖软件
+cd xxxxx/gvb/deploy/
+docker compose up -d
+
+#启动后端应用
+cd xxxxx/gvb/gvb_server/
+./main -es create (首先创建es的索引)
+nohup ./main > main.log 2>&1 & （启动后端程序）
+
+tail -f main.log  (访问日志)
+```
+
+访问应用
+
+---
+
+## 最后
+
+万里code，二次开发开源项目。
