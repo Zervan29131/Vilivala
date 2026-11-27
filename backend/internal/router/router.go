@@ -39,11 +39,16 @@ func Setup() *gin.Engine {
 		api.GET("/archives", handler.Archives)
 		api.GET("/pages", handler.ListPages)
 		api.GET("/pages/:slug", handler.GetPage)
+		api.GET("/site-config", handler.GetSiteConfig)
 
 		// --- Admin routes (JWT protected) ---
 		admin := api.Group("/admin")
 		admin.Use(middleware.JWTAuth())
 		{
+			// Dashboard & Site Config
+			admin.GET("/dashboard", handler.AdminDashboard)
+			admin.PUT("/site-config", handler.AdminPutSiteConfig)
+
 			// Posts
 			admin.GET("/posts", handler.AdminListPosts)
 			admin.GET("/posts/:id", handler.AdminGetPost)

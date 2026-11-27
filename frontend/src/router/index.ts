@@ -26,6 +26,7 @@ const router = createRouter({
           props: (route) => ({ filterType: 'tag', filterSlug: route.params.slug }),
         },
         { path: 'pages/:slug', component: () => import('@/views/front/PageView.vue') },
+        { path: ':pathMatch(.*)*', component: () => import('@/views/front/NotFoundView.vue') },
       ],
     },
     // ---- Terminal browser start page ----
@@ -43,19 +44,16 @@ const router = createRouter({
       component: () => import('@/views/admin/AdminLayout.vue'),
       meta: { requiresAuth: true },
       children: [
-        { path: '', redirect: '/admin/posts' },
+        { path: '', redirect: '/admin/dashboard' },
+        { path: 'dashboard', component: () => import('@/views/admin/DashboardView.vue') },
         { path: 'posts', component: () => import('@/views/admin/PostsView.vue') },
         { path: 'posts/new', component: () => import('@/views/admin/PostEditorView.vue') },
         { path: 'posts/:id/edit', component: () => import('@/views/admin/PostEditorView.vue') },
         { path: 'categories', component: () => import('@/views/admin/CategoriesView.vue') },
         { path: 'tags', component: () => import('@/views/admin/TagsView.vue') },
         { path: 'pages', component: () => import('@/views/admin/PagesView.vue') },
+        { path: 'settings', component: () => import('@/views/admin/SiteSettingsView.vue') },
       ],
-    },
-    // 404 fallback
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/',
     },
   ],
   scrollBehavior(_to, _from, savedPosition) {

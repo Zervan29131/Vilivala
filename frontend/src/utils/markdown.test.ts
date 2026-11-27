@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { renderMarkdown, slugifyHeading } from './markdown'
 
 describe('markdown utilities', () => {
-  it('generates readable Unicode heading slugs and deduplicates repeats', () => {
+  it('generates readable Unicode heading slugs, deduplicates repeats, and adds # anchor', () => {
     expect(slugifyHeading('快速开始 & 安装')).toBe('快速开始-安装')
     const { toc, html } = renderMarkdown('## 简介\n\n## 简介\n\n### Hello World!')
     expect(toc.map((t) => t.id)).toEqual(['简介', '简介-2', 'hello-world'])
     expect(html).toContain('id="简介-2"')
+    expect(html).toContain('class="header-anchor"')
   })
 
   it('sanitizes dangerous HTML / XSS payloads', () => {
@@ -15,14 +16,35 @@ describe('markdown utilities', () => {
     expect(html).not.toContain('onerror')
   })
 
-  it('normalizes bare email links to mailto without double-prefixing, and adds lazy loading on images', () => {
+  it('normalizes bare email links, marks external links, and wraps descriptive images in figure', () => {
     const { html } = renderMarkdown(
-      '联系 [me](user@example.com) 或 [already](mailto:user@example.com) 和 ![配图](https://example.com/a.png)'
+      '联系 [me](user@example.com) 或 [already](mailto:user@example.com) 访问 [官网](https://vuejs.org) 和 ![架构示意图](https://zervan.cn/img/console.jpg)'
     )
     expect(html).toContain('href="mailto:user@example.com"')
     expect(html).not.toContain('mailto:mailto:')
-    expect(html).toContain('loading="lazy"')
-    expect(html).toContain('data-lightbox="true"')
+    expect(html).toContain('class="ext-link"')
+    expect(html).toContain('src="/img/console.jpg"')
+    expect(html).toContain('<figure class="md-figure">')
+    expect(html).toContain('<figcaption class="md-figcaption">架构示意图</figcaption>')
+  })
+
+  it('renders GitHub [!TIP] and VuePress ::: warning callouts', () => {
+    const { html } = renderMarkdown(
+      '> [!TIP]\n> 推荐使用 pnpm\n\n::: warning 版本要求\n需要 Node 18+\n:::'
+    )
+    expect(html).toContain('callout callout-tip')
+    expect(html).toContain('callout callout-warning')
+    expect(html).toContain('版本要求')
+  })
+
+  it('parses VuePress ::: cardList YAML into friend link cards', () => {
+    const { html } = renderMarkdown(
+      '::: cardList\n```yaml\n- name: Zervan\n  desc: Be the change\n  avatar: https://zervan.cn/img/console.jpg\n  link: https://zervan.cn/\n```\n:::'
+    )
+    expect(html).toContain('class="friend-grid"')
+    expect(html).toContain('class="friend-card"')
+    expect(html).toContain('Zervan')
+    expect(html).toContain('src="/img/console.jpg"')
   })
 
   it('strips a duplicate leading H1 when it matches the post title', () => {
@@ -35,8 +57,9 @@ describe('markdown utilities', () => {
   })
 
   it('renders highlighted code block with copy button', () => {
-    const { html } = renderMarkdown('```ts\nconst x = 1\n```')
+    const { html } = renderMarkdown('```diff\n+added\n-removed\n```')
     expect(html).toContain('class="copy-btn"')
-    expect(html).toContain('class="hljs"')
+    expect(html).toContain('hljs-addition')
+    expect(html).toContain('hljs-deletion')
   })
 })

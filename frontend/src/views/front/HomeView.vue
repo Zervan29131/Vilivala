@@ -12,10 +12,11 @@
           class="h-14 sm:h-16 mx-auto mb-6 object-contain select-none"
         />
         <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-white">
-          {{ siteConfig.hero.title }}
+          {{ site.config.hero_title }}
         </h1>
-        <p class="mt-4 text-sm sm:text-base text-gray-300/90 max-w-xl mx-auto">
-          {{ siteConfig.hero.tagline }}
+        <p class="mt-4 text-sm sm:text-base text-gray-300/90 max-w-xl mx-auto min-h-[1.6rem]">
+          <span>{{ typedText }}</span>
+          <span v-if="typewriterActive" class="inline-block w-[2px] h-4 bg-[#4fc08d] ml-0.5 align-middle animate-pulse" aria-hidden="true" />
         </p>
         <div class="mt-7">
           <router-link
@@ -78,18 +79,19 @@
     <!-- Bottom-left Waving Panda Widget (from legacy Vilivala) -->
     <img
       :src="siteConfig.pandaWidget"
-      alt="Panda"
+      alt=""
       class="hidden xl:block fixed bottom-0 left-2 w-[120px] h-[106px] object-contain opacity-85 hover:opacity-100 transition-opacity pointer-events-none select-none z-20"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPublishedPosts } from '@/api'
 import type { Post } from '@/api/types'
 import { siteConfig } from '@/site.config'
+import { useSiteStore } from '@/stores/site'
 import PostCard from '@/components/PostCard.vue'
 import Pagination from '@/components/Pagination.vue'
 import SideBar from '@/components/SideBar.vue'
@@ -99,6 +101,7 @@ import EmptyState from '@/components/EmptyState.vue'
 
 const route = useRoute()
 const router = useRouter()
+const site = useSiteStore()
 const posts = ref<Post[]>([])
 const total = ref(0)
 const pageSize = 10
@@ -106,6 +109,55 @@ const loading = ref(false)
 const errorMsg = ref('')
 
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
+
+// Lightweight native multi-string typewriter (inspired by Bilibala, zero CDN deps)
+const typedText = ref(site.config.hero_tagline)
+const typewriterActive = ref(false)
+let twTimer: number | undefined
+
+function startTypewriter() {
+  window.clearTimeout(twTimer)
+  const list = site.config.subtitles?.filter(Boolean) || [site.config.hero_tagline]
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduced || list.length <= 1) {
+    typedText.value = list[0] || site.config.hero_tagline
+    typewriterActive.value = false
+    return
+  }
+  typewriterActive.value = true
+  let strIdx = 0
+  let charIdx = list[0].length
+  let deleting = false
+  typedText.value = list[0]
+
+  const step = () => {
+    const current = list[strIdx % list.length]
+    if (!deleting) {
+      charIdx++
+      typedText.value = current.slice(0, charIdx)
+      if (charIdx >= current.length) {
+        deleting = true
+        twTimer = window.setTimeout(step, 2600)
+        return
+      }
+      twTimer = window.setTimeout(step, 90)
+    } else {
+      charIdx--
+      typedText.value = current.slice(0, charIdx)
+      if (charIdx <= 0) {
+        deleting = false
+        strIdx = (strIdx + 1) % list.length
+        twTimer = window.setTimeout(step, 350)
+        return
+      }
+      twTimer = window.setTimeout(step, 45)
+    }
+  }
+  twTimer = window.setTimeout(() => {
+    deleting = true
+    step()
+  }, 2600)
+}
 
 async function load() {
   loading.value = true
@@ -131,4 +183,7 @@ function goPage(n: number) {
 }
 
 watch(() => route.fullPath, load, { immediate: true })
+watch(() => site.config.subtitles, startTypewriter)
+onMounted(startTypewriter)
+onBeforeUnmount(() => window.clearTimeout(twTimer))
 </script>

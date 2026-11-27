@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"vilivala-backend/config"
+	"vilivala-backend/internal/middleware"
 	"vilivala-backend/internal/model"
 )
 
@@ -57,9 +58,13 @@ func listPosts(c *gin.Context, publishedOnly bool) {
 		Fail(c, http.StatusInternalServerError, 500, "查询失败")
 		return
 	}
+	orderClause := postOrder
+	if c.Query("sort") == "views" {
+		orderClause = "view_count DESC, id DESC"
+	}
 	posts := []model.Post{}
 	err := q.Omit("content").Preload("Tags").
-		Order(postOrder).Offset((page - 1) * size).Limit(size).Find(&posts).Error
+		Order(orderClause).Offset((page - 1) * size).Limit(size).Find(&posts).Error
 	if err != nil {
 		Fail(c, http.StatusInternalServerError, 500, "查询失败")
 		return
@@ -90,9 +95,10 @@ type relatedPost struct {
 
 type postDetail struct {
 	model.Post
-	Prev    *postLink     `json:"prev"`
-	Next    *postLink     `json:"next"`
-	Related []relatedPost `json:"related"`
+	Prev      *postLink     `json:"prev"`
+	Next      *postLink     `json:"next"`
+	Related   []relatedPost `json:"related"`
+	IsPreview bool          `json:"is_preview,omitempty"`
 }
 
 // relatedPosts scores published posts by shared tags (+2 each) and same category (+1).
@@ -175,11 +181,25 @@ func neighbours(id uint) (prev, next *postLink) {
 	return
 }
 
-// GetPostBySlug GET /api/posts/:slug (view_count +1)
+// hasValidAdminToken checks whether the request carries a valid admin JWT (optional auth).
+func hasValidAdminToken(c *gin.Context) bool {
+	authHeader := c.GetHeader("Authorization")
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return false
+	}
+	_, err := middleware.ParseToken(strings.TrimPrefix(authHeader, "Bearer "))
+	return err == nil
+}
+
+// GetPostBySlug GET /api/posts/:slug (view_count +1 for published; allows admin draft preview)
 func GetPostBySlug(c *gin.Context) {
+	isAdmin := hasValidAdminToken(c)
 	var p model.Post
-	err := config.DB.Preload("Tags").
-		Where("slug = ? AND status = ?", c.Param("slug"), "published").First(&p).Error
+	q := config.DB.Preload("Tags").Where("slug = ?", c.Param("slug"))
+	if !isAdmin {
+		q = q.Where("status = ?", "published")
+	}
+	err := q.First(&p).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		Fail(c, http.StatusNotFound, 404, "文章不存在")
 		return
@@ -187,13 +207,19 @@ func GetPostBySlug(c *gin.Context) {
 		Fail(c, http.StatusInternalServerError, 500, "查询失败")
 		return
 	}
-	config.DB.Model(&model.Post{}).Where("id = ?", p.ID).
-		UpdateColumn("view_count", gorm.Expr("view_count + 1"))
-	p.ViewCount++
+
+	isPreview := p.Status != "published"
+	if !isPreview {
+		config.DB.Model(&model.Post{}).Where("id = ?", p.ID).
+			UpdateColumn("view_count", gorm.Expr("view_count + 1"))
+		p.ViewCount++
+	}
 	ps := []model.Post{p}
 	fillCategories(ps)
-	d := postDetail{Post: ps[0]}
-	d.Prev, d.Next = neighbours(p.ID)
+	d := postDetail{Post: ps[0], IsPreview: isPreview}
+	if !isPreview {
+		d.Prev, d.Next = neighbours(p.ID)
+	}
 	d.Related = relatedPosts(p, 4)
 	OK(c, d)
 }

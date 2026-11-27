@@ -73,11 +73,19 @@
       @on-upload-img="onUploadImg"
     />
 
-    <div class="flex gap-3 mt-4 sticky bottom-0 bg-[#f6f6f7]/90 dark:bg-[#1a1a1a]/90 backdrop-blur py-3">
+    <div class="flex items-center gap-3 mt-4 sticky bottom-0 bg-[#f6f6f7]/90 dark:bg-[#1a1a1a]/90 backdrop-blur py-3">
       <button class="btn-secondary" :disabled="saving" @click="save('draft')">保存草稿</button>
       <button class="btn-primary" :disabled="saving" @click="save('published')">
         {{ isEdit && originalStatus === 'published' ? '更新并发布' : '发布' }}
       </button>
+      <router-link
+        v-if="isEdit && form.slug"
+        :to="`/posts/${form.slug}`"
+        target="_blank"
+        class="btn-secondary ml-auto"
+      >
+        前台预览 ↗
+      </router-link>
     </div>
   </div>
 </template>

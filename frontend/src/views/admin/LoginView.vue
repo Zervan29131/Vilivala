@@ -40,7 +40,7 @@ async function submit() {
     const res = await login(form)
     auth.setAuth(res.data.token, res.data.user)
     toast.success('登录成功')
-    router.replace((route.query.redirect as string) || '/admin/posts')
+    router.replace((route.query.redirect as string) || '/admin/dashboard')
   } catch {
     /* error toast shown by interceptor */
   } finally {
