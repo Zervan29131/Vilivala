@@ -1,0 +1,1 @@
+function r(e){const t=new Date(e);return isNaN(t.getTime())?"":`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`}function n(e,t="x"){return e.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`${t}-${Date.now().toString(36)}`}export{r as f,n as m};

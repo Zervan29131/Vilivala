@@ -1,65 +1,81 @@
-# 介绍
-该博客的初衷是打造一个好用的、面向程序员的知识管理工具
-轻松构建一个结构化的知识库，让你的知识海洋像一本本书一样清晰易读。
-提供一种知识的碎片化形态，并支持个性化博客配置。
-简洁高效，以 Markdown 为中心的项目结构。内置自动化工具，以更少的配置完成更多的事。配合多维索引快速定位每个知识点。
+# Vilivala 个人博客
 
-### 知识管理
+前后端分离的个人博客：**Vue 3 + TypeScript + Tailwind** / **Go (Gin + GORM)** / **MySQL 8.0**。
 
-包含三种典型的知识管理形态：结构化、碎片化、体系化。轻松打造属于你自己的知识管理平台
+接口契约见 [docs/API.md](docs/API.md)（前后端唯一契约，改字段先改它）。
 
-### 简洁高效
+## 目录结构
 
-以 Markdown 为中心的项目结构，内置自动化工具，以更少的配置完成更多的事。配合多维索引快速定位每个知识点
+```
+backend/    Go 后端（:8080）
+frontend/   Vue 3 前端（:5173，/api 代理到 :8080）
+docs/       API.md 接口契约
+docker-compose.yml   可选：Docker 启动 MySQL
+```
 
-### 沉浸式阅读
+## 环境要求
 
-专为阅读设计的UI，配合多种颜色模式、可关闭的侧边栏和导航栏，带给你一种沉浸式阅读体验
+Go 1.22+、Node 18+、MySQL 8.0（本机安装或 Docker 二选一）
 
-# 特性
+## 启动步骤
 
-## 知识管理
-包含三种典型的知识管理形态：结构化、碎片化、体系化。轻松打造属于你自己的知识管理平台。
+### 1. 数据库（二选一）
 
-### 结构化
+**A. 本机 MySQL（macOS / Homebrew）**
 
-自动生成侧边栏、目录页、索引页、面包屑等，轻松构建一个结构化知识库。
+```bash
+brew install mysql@8.0 && brew services start mysql@8.0
+mysql -u root -e "CREATE DATABASE personal_blog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'bloguser'@'127.0.0.1' IDENTIFIED BY 'blogpass123';
+GRANT ALL ON personal_blog.* TO 'bloguser'@'127.0.0.1';"
+```
 
-### 碎片化&个性化
+**B. Docker**
 
-博客功能提供一种知识的碎片化形态，并提供个性化的博客配置。
+```bash
+docker compose up -d     # 账号 bloguser / blogpass123，库 personal_blog
+```
 
-### 简洁高效
+### 2. 后端
 
-以 Markdown 为中心的项目结构，内置自动化工具，以更少的配置完成更多的事。配合多维索引快速定位每个知识点。
+```bash
+cd backend
+cp .env.example .env     # 按需修改
+go run ./cmd/server      # 首次启动自动建表并写入示例数据
+```
 
-### 沉浸式阅读体验
+### 3. 前端
 
-专为阅读设计的UI，配合多种颜色模式、可关闭的侧边栏和导航栏，带给你一种沉浸式阅读体验。
+```bash
+cd frontend
+npm install
+npm run dev              # http://localhost:5173
+```
 
-# 扩展功能
-相较于默认主题，添加的功能内容主要有：
+生产构建：`npm run build`（产物在 `frontend/dist`）。
 
-添加方便管理学习笔记和技术文档的自动生成结构化侧边栏、自动生成front matter、目录页、扩展的搜索框插件、面包屑、快捷翻页按钮 等，让你快速定位到任何你想要找的内容。
+## 默认管理员
 
-添加博客相关的 文章信息栏（作者与创建时间）、最近更新栏 、博主信息栏、页脚版权栏、分类功能+分类页、标签功能+标签页、归档页、评论插件等。
+| 项 | 值 |
+| --- | --- |
+| 后台入口 | http://localhost:5173/admin/login |
+| 用户名 | `admin` |
+| 密码 | `admin123` |
 
-方便好用的 Markdown 容器。
+> 仅在 `users` 表为空时自动创建，**上线前请务必修改密码**。
 
-首页文章列表、个性化配置和样式美化等。
+## 环境变量（`backend/.env`）
 
-多种颜色模式供用户选择：跟随系统、浅色模式、深色模式、阅读模式
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `DB_DSN` | `bloguser:blogpass123@tcp(127.0.0.1:3306)/personal_blog?charset=utf8mb4&parseTime=True&loc=Local` | MySQL 连接串 |
+| `SERVER_PORT` | `8080` | 后端端口 |
+| `JWT_SECRET` | 示例值 | JWT 签名密钥，**生产必须替换** |
+| `GIN_MODE` | `debug` | `debug` / `release` |
 
-提高搬砖效率的辅助工具： 批量操作front matter工具
+`.env` 已加入 `.gitignore`，不会提交密码。
 
-## 例图
+## 功能
 
-![vilivala首页](./diagram/vilivala首页.png)
-
-![vilivala首页2](./diagram/vilivala首页2.png)
-
-# 快速上手
-
-### 生成静态文件
-
->npm run build
+- 前台：文章列表、搜索、分页、分类/标签筛选、文章详情（Markdown、代码高亮与复制、目录 TOC）
+- 后台：登录鉴权、文章增删改查（草稿/发布）、Markdown 分屏编辑器、分类与标签管理

@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#f6f6f7] text-[#213547] dark:bg-[#1a1a1a] dark:text-[#e5e7eb] antialiased transition-colors duration-200;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center px-4 py-2 bg-[#42b883] text-white text-sm font-medium rounded-lg hover:bg-[#33a06f] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center px-4 py-2 bg-white dark:bg-[#242424] text-[#213547] dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors duration-150;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors duration-150;
+  }
+
+  .card {
+    @apply bg-white dark:bg-[#242424] rounded-xl border border-gray-200/80 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 bg-white dark:bg-[#1e1e1e] text-[#213547] dark:text-gray-100 border border-gray-200 dark:border-white/15 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#42b883]/60 focus:border-[#42b883] transition;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+/* ---------- Hero Dark Grid (ported from Vilivala) ---------- */
+.hero-grid {
+  background-color: #222327;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* ---------- Markdown article ---------- */
+.md-body { @apply text-[16px] leading-[1.85] text-[#2c3e50] dark:text-gray-300 break-words; }
+.md-body h1 { @apply text-3xl mt-10 mb-4 text-[#213547] dark:text-white; }
+.md-body h2 { @apply text-2xl mt-10 mb-4 pb-2 border-b border-gray-200/80 dark:border-white/10 text-[#213547] dark:text-white; scroll-margin-top: 5rem; }
+.md-body h3 { @apply text-xl mt-8 mb-3 text-[#213547] dark:text-gray-100; scroll-margin-top: 5rem; }
+.md-body h4 { @apply text-lg mt-6 mb-2 text-[#213547] dark:text-gray-100; }
+.md-body p { @apply my-4; }
+.md-body a { @apply text-[#42b883] dark:text-[#4fc08d] underline underline-offset-2 hover:opacity-80; }
+.md-body ul { @apply list-disc pl-6 my-4 space-y-1.5; }
+.md-body ol { @apply list-decimal pl-6 my-4 space-y-1.5; }
+.md-body blockquote { @apply my-5 pl-4 py-1.5 border-l-4 border-[#42b883] bg-[#42b883]/5 dark:bg-[#42b883]/10 text-gray-600 dark:text-gray-300 rounded-r-lg; }
+.md-body blockquote p { @apply my-1; }
+.md-body img { @apply rounded-lg my-4 max-w-full border border-gray-200/60 dark:border-white/10; }
+.md-body hr { @apply my-8 border-gray-200 dark:border-white/10; }
+.md-body :not(pre) > code { @apply px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-[#35495e] dark:text-[#4fc08d] text-[0.88em] font-mono; }
+.md-body table { @apply w-full my-5 text-sm border-collapse block overflow-x-auto; }
+.md-body th { @apply bg-gray-50 dark:bg-white/5 text-left font-semibold px-4 py-2 border border-gray-200 dark:border-white/10; }
+.md-body td { @apply px-4 py-2 border border-gray-200 dark:border-white/10; }
+
+/* Code block: light theme by default, dark theme under html.dark */
+.code-block { @apply my-5 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-[#f6f8fa] dark:bg-[#161b22] shadow-sm; }
+.code-head { @apply flex items-center justify-between px-4 py-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-100/80 dark:bg-[#0d1117]/80 border-b border-gray-200/70 dark:border-white/5; }
+.copy-btn { @apply px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors; }
+.code-block pre { @apply m-0 overflow-x-auto; }
+.code-block code.hljs { @apply block p-4 text-[13.5px] leading-6 font-mono bg-transparent text-[#24292f] dark:text-[#c9d1d9]; }
+
+/* highlight.js — GitHub Light */
+.hljs-comment, .hljs-quote { color: #6e7781; font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: #cf222e; }
+.hljs-string, .hljs-regexp, .hljs-addition { color: #0a3069; }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-attribute { color: #0550ae; }
+.hljs-title, .hljs-section, .hljs-title.function_, .hljs-title.class_ { color: #8250df; }
+.hljs-built_in, .hljs-type, .hljs-name, .hljs-tag { color: #116329; }
+.hljs-variable, .hljs-template-variable, .hljs-params { color: #953800; }
+
+/* highlight.js — GitHub Dark */
+.dark .hljs-comment, .dark .hljs-quote { color: #8b949e; }
+.dark .hljs-keyword, .dark .hljs-selector-tag, .dark .hljs-literal, .dark .hljs-doctag { color: #ff7b72; }
+.dark .hljs-string, .dark .hljs-regexp, .dark .hljs-addition { color: #a5d6ff; }
+.dark .hljs-number, .dark .hljs-symbol, .dark .hljs-bullet, .dark .hljs-attribute { color: #79c0ff; }
+.dark .hljs-title, .dark .hljs-section, .dark .hljs-title.function_, .dark .hljs-title.class_ { color: #d2a8ff; }
+.dark .hljs-built_in, .dark .hljs-type, .dark .hljs-name, .dark .hljs-tag { color: #7ee787; }
+.dark .hljs-variable, .dark .hljs-template-variable, .dark .hljs-params { color: #ffa657; }
