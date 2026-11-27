@@ -101,6 +101,7 @@
 import { computed, ref } from 'vue'
 import QRCode from 'qrcode'
 import { useSiteStore } from '@/stores/site'
+import { copyText } from '@/utils/clipboard'
 import { toast } from '@/utils/toast'
 
 const props = defineProps<{
@@ -134,10 +135,9 @@ async function openShare() {
 }
 
 async function copyShareLink() {
-  try {
-    await navigator.clipboard.writeText(`${props.title} ${fullUrl.value}`)
+  if (await copyText(`${props.title} ${fullUrl.value}`)) {
     toast.success('分享链接已复制')
-  } catch {
+  } else {
     toast.error('复制失败')
   }
 }

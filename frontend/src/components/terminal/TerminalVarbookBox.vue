@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { copyText } from '@/utils/clipboard'
 import { buildNamingVariants } from '@/utils/terminal/varbook'
 import { toast } from '@/utils/toast'
 
@@ -41,14 +42,13 @@ const copiedVal = ref('')
 const parsed = computed(() => buildNamingVariants(props.query))
 
 async function copyVal(val: string) {
-  try {
-    await navigator.clipboard.writeText(val)
+  if (await copyText(val)) {
     copiedVal.value = val
     toast.success(`已复制：${val}`)
     setTimeout(() => {
       if (copiedVal.value === val) copiedVal.value = ''
     }, 1500)
-  } catch {
+  } else {
     toast.error('复制失败')
   }
 }

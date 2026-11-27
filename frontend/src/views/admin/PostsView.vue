@@ -6,12 +6,12 @@
     </div>
 
     <div class="flex flex-wrap gap-2 mb-4">
-      <select v-model="status" class="input-field !w-32" @change="reload(1)">
+      <select v-model="status" class="input-field !w-28 sm:!w-32" @change="reload(1)">
         <option value="">全部状态</option>
         <option value="published">已发布</option>
         <option value="draft">草稿</option>
       </select>
-      <input v-model="keyword" class="input-field !w-56" placeholder="搜索标题、摘要或正文…" @keyup.enter="reload(1)" />
+      <input v-model="keyword" class="input-field flex-1 min-w-[160px] sm:!w-56 sm:flex-none" placeholder="搜索标题、摘要或正文…" @keyup.enter="reload(1)" />
       <button class="btn-secondary" @click="reload(1)">搜索</button>
     </div>
 
@@ -19,36 +19,41 @@
       <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-left">
           <tr>
-            <th class="px-4 py-3 font-medium">标题</th>
-            <th class="px-4 py-3 font-medium">分类</th>
-            <th class="px-4 py-3 font-medium">状态</th>
-            <th class="px-4 py-3 font-medium">字数 / 阅读</th>
-            <th class="px-4 py-3 font-medium">创建时间</th>
-            <th class="px-4 py-3 font-medium text-right">操作</th>
+            <th class="px-3.5 sm:px-4 py-3 font-medium">标题</th>
+            <th class="hidden lg:table-cell px-4 py-3 font-medium">分类</th>
+            <th class="px-3 sm:px-4 py-3 font-medium whitespace-nowrap">状态</th>
+            <th class="hidden md:table-cell px-4 py-3 font-medium">字数 / 阅读</th>
+            <th class="hidden sm:table-cell px-4 py-3 font-medium">创建时间</th>
+            <th class="px-3.5 sm:px-4 py-3 font-medium text-right">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="p in posts" :key="p.id" class="border-t border-gray-100 dark:border-white/10 hover:bg-gray-50/60 dark:hover:bg-white/[0.03]">
-            <td class="px-4 py-3 font-medium text-[#213547] dark:text-gray-100 max-w-xs truncate">
-              <span v-if="p.is_top" class="badge bg-[#42b883]/15 text-[#42b883] mr-1.5">顶</span>
-              {{ p.title }}
+            <td class="px-3.5 sm:px-4 py-3 font-medium text-[#213547] dark:text-gray-100 max-w-[180px] sm:max-w-xs">
+              <div class="truncate">
+                <span v-if="p.is_top" class="badge bg-[#42b883]/15 text-[#42b883] mr-1.5">顶</span>
+                {{ p.title }}
+              </div>
+              <div class="sm:hidden mt-1 text-[11px] font-normal text-gray-400 truncate">
+                {{ p.category?.name || '未分类' }} · {{ formatDate(p.created_at) }}
+              </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+            <td class="hidden lg:table-cell px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
               {{ p.category?.path?.map((n) => n.name).join(' / ') || '—' }}
             </td>
-            <td class="px-4 py-3">
+            <td class="px-3 sm:px-4 py-3 whitespace-nowrap">
               <span
                 class="badge"
                 :class="p.status === 'published' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'"
               >
-                {{ p.status === 'published' ? '已发布' : '草稿' }}
+                {{ p.status === 'published' ? '已发' : '草稿' }}
               </span>
             </td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+            <td class="hidden md:table-cell px-4 py-3 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">
               {{ p.word_count }} 字 · {{ p.view_count }}
             </td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{{ formatDate(p.created_at) }}</td>
-            <td class="px-4 py-3 text-right whitespace-nowrap space-x-3">
+            <td class="hidden sm:table-cell px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs whitespace-nowrap">{{ formatDate(p.created_at) }}</td>
+            <td class="px-3.5 sm:px-4 py-3 text-right whitespace-nowrap space-x-2 sm:space-x-3 text-xs sm:text-sm">
               <router-link :to="`/posts/${p.slug}`" target="_blank" class="text-gray-500 dark:text-gray-400 hover:text-[#42b883]">
                 预览
               </router-link>

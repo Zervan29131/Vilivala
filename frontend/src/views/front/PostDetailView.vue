@@ -138,7 +138,7 @@
           ⏳ 本文发布于 {{ staleYears }} 年前（{{ formatDate(post.created_at) }}），文中涉及的部分软件版本、环境或命令可能已随时间更新，阅读时请注意甄别。
         </div>
 
-        <div class="card p-6 sm:p-10">
+        <div class="card p-4 sm:p-8 lg:p-10">
           <div ref="bodyRef" class="md-body" v-html="html" @click="onBodyClick" />
 
           <!-- Reward & Share Actions -->
@@ -160,12 +160,12 @@
               {{ post.prev.title }}
             </div>
           </router-link>
-          <div v-else />
+          <div v-else class="hidden sm:block" />
 
           <router-link
             v-if="post.next"
             :to="`/posts/${post.next.slug}`"
-            class="card p-4 text-right hover:border-[#42b883] transition-colors group"
+            class="card p-4 text-left sm:text-right hover:border-[#42b883] transition-colors group"
           >
             <div class="text-xs text-gray-400 mb-1">下一篇 →</div>
             <div class="text-sm font-medium text-[#213547] dark:text-gray-100 group-hover:text-[#42b883] truncate">
@@ -221,6 +221,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox.vue'
 import PostActions from '@/components/PostActions.vue'
 import PostCopyright from '@/components/PostCopyright.vue'
+import { copyText } from '@/utils/clipboard'
 import { attachMarkdownImageFallbacks, renderMarkdown, type TocItem } from '@/utils/markdown'
 import { formatDate } from '@/utils/format'
 import { updatePageMeta } from '@/utils/seo'
@@ -350,11 +351,8 @@ async function onBodyClick(e: MouseEvent) {
     if (id) {
       jump(id)
       const full = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(id)}`
-      try {
-        await navigator.clipboard.writeText(full)
+      if (await copyText(full)) {
         toast.success('章节链接已复制')
-      } catch {
-        /* ignore clipboard failure */
       }
     }
     return
@@ -364,11 +362,10 @@ async function onBodyClick(e: MouseEvent) {
   const btn = target.closest('.copy-btn') as HTMLButtonElement | null
   if (btn) {
     const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? ''
-    try {
-      await navigator.clipboard.writeText(code)
+    if (await copyText(code)) {
       btn.textContent = '已复制'
       setTimeout(() => (btn.textContent = '复制'), 1500)
-    } catch {
+    } else {
       toast.error('复制失败')
     }
     return

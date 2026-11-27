@@ -16,7 +16,7 @@ func Setup() *gin.Engine {
 	// Global middleware
 	r.Use(middleware.CORS())
 
-	r.Static("/uploads", "./"+handler.UploadDir)
+	r.Static("/uploads", handler.ResolveUploadDir())
 
 	// SEO & feed endpoints
 	r.GET("/robots.txt", handler.RobotsTxt)

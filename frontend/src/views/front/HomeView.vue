@@ -3,47 +3,49 @@
     <!-- Hero Banner (hidden when actively searching) -->
     <section
       v-if="!route.query.keyword && page === 1"
-      class="hero-grid text-white py-14 sm:py-20 px-4 border-b border-white/10"
+      class="hero-grid text-white py-10 sm:py-16 lg:py-20 px-4 border-b border-white/10"
     >
       <div class="max-w-5xl mx-auto text-center">
         <img
           :src="siteConfig.hero.image"
           alt="Hero Logo"
-          class="h-14 sm:h-16 mx-auto mb-6 object-contain select-none"
+          class="h-12 sm:h-16 mx-auto mb-5 sm:mb-6 object-contain select-none"
         />
-        <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-white">
+        <h1 class="text-2xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
           {{ site.config.hero_title }}
         </h1>
-        <p class="mt-4 text-sm sm:text-base text-gray-300/90 max-w-xl mx-auto min-h-[1.6rem]">
+        <p class="mt-3 sm:mt-4 text-xs sm:text-base text-gray-300/90 max-w-xl mx-auto min-h-[1.6rem]">
           <span>{{ typedText }}</span>
           <span v-if="typewriterActive" class="inline-block w-[2px] h-4 bg-[#4fc08d] ml-0.5 align-middle animate-pulse" aria-hidden="true" />
         </p>
-        <div class="mt-7">
+        <div class="mt-5 sm:mt-7">
           <router-link
             :to="siteConfig.hero.actionLink"
-            class="inline-flex items-center px-6 py-2.5 rounded-md bg-black/80 hover:bg-[#42b883] text-white text-sm font-medium border border-white/15 hover:border-[#42b883] transition-colors duration-200"
+            class="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 rounded-md bg-black/80 hover:bg-[#42b883] text-white text-sm font-medium border border-white/15 hover:border-[#42b883] transition-colors duration-200"
           >
             {{ siteConfig.hero.actionText }}
           </router-link>
         </div>
 
-        <!-- 3 Section Cards -->
-        <div class="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <!-- 3 Section Cards (compact horizontal row on phones, tall vertical cards on sm+) -->
+        <div class="mt-8 sm:mt-14 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 max-w-4xl mx-auto">
           <router-link
             v-for="f in siteConfig.features"
             :key="f.slug"
             :to="`/categories/${f.slug}`"
-            class="group flex flex-col items-center p-5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-[#42b883]/50 transition-all duration-200 hover:-translate-y-1"
+            class="group flex sm:flex-col items-center gap-4 sm:gap-0 p-3.5 sm:p-5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] hover:border-[#42b883]/50 transition-all duration-200 sm:hover:-translate-y-1 text-left sm:text-center"
           >
             <img
               :src="f.imgUrl"
               :alt="f.title"
-              class="w-24 h-24 sm:w-28 sm:h-28 object-contain opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-200"
+              class="w-14 h-14 sm:w-28 sm:h-28 object-contain opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-200 shrink-0"
             />
-            <div class="mt-4 text-lg font-semibold text-white group-hover:text-[#4fc08d] transition-colors">
-              {{ f.title }}
+            <div class="min-w-0">
+              <div class="sm:mt-4 text-base sm:text-lg font-semibold text-white group-hover:text-[#4fc08d] transition-colors">
+                {{ f.title }}
+              </div>
+              <div class="mt-0.5 sm:mt-1 text-xs text-gray-400">{{ f.details }}</div>
             </div>
-            <div class="mt-1 text-xs text-gray-400">{{ f.details }}</div>
           </router-link>
         </div>
       </div>

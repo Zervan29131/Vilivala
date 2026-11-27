@@ -5,7 +5,7 @@
     <main class="flex-1">
       <router-view />
     </main>
-    <footer class="border-t border-gray-200/70 dark:border-white/10 py-8 mt-12">
+    <footer class="border-t border-gray-200/70 dark:border-white/10 py-8 mt-12 pb-safe">
       <div class="max-w-7xl mx-auto px-4 space-y-2.5 text-xs text-gray-400">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-x-2 gap-y-1">
@@ -57,7 +57,7 @@
     <BackToTop />
     <button
       type="button"
-      class="fixed bottom-5 right-5 z-30 w-10 h-10 rounded-full bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-base hover:scale-105 hover:border-[#42b883] transition"
+      class="fixed floating-safe-bottom right-3.5 sm:right-5 z-30 w-10 h-10 rounded-full bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-base hover:scale-105 hover:border-[#42b883] transition"
       :title="`切换主题（当前：${theme.mode}）`"
       aria-label="切换主题"
       @click="theme.cycle()"

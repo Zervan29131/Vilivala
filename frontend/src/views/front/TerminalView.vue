@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen flex flex-col text-gray-100 transition-colors duration-300 relative"
+    class="min-h-dvh-safe flex flex-col text-gray-100 transition-colors duration-300 relative"
     :class="bgImage ? 'bg-black' : bgClass"
     :style="bgWrapperStyle"
   >
@@ -34,25 +34,40 @@
         </div>
 
         <!-- Right: Background switcher & blog links -->
-        <div class="flex items-center gap-1.5 text-xs">
-          <button
-            v-for="preset in bgPresets"
-            :key="preset.key"
-            type="button"
-            class="px-2 py-1 rounded transition-colors"
-            :class="
-              !bgImage && bgMode === preset.key
-                ? 'bg-[#42b883] text-white'
-                : 'text-gray-400 hover:text-white hover:bg-white/10'
-            "
-            @click="setBgPreset(preset.key)"
+        <div class="flex items-center gap-1.5 text-xs shrink-0">
+          <!-- Compact select on small phones -->
+          <select
+            :value="bgMode"
+            aria-label="切换终端背景"
+            class="sm:hidden bg-white/10 text-gray-200 rounded px-2 py-1 text-xs border border-white/10 focus:outline-none"
+            @change="setBgPreset(($event.target as HTMLSelectElement).value as BgMode)"
           >
-            {{ preset.label }}
-          </button>
-          <span class="text-white/15 mx-0.5">|</span>
+            <option v-for="preset in bgPresets" :key="preset.key" :value="preset.key" class="bg-[#1a1a1a] text-white">
+              {{ preset.label }}
+            </option>
+          </select>
+
+          <!-- Buttons on sm+ -->
+          <div class="hidden sm:flex items-center gap-1">
+            <button
+              v-for="preset in bgPresets"
+              :key="preset.key"
+              type="button"
+              class="px-2 py-1 rounded transition-colors"
+              :class="
+                !bgImage && bgMode === preset.key
+                  ? 'bg-[#42b883] text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/10'
+              "
+              @click="setBgPreset(preset.key)"
+            >
+              {{ preset.label }}
+            </button>
+          </div>
+          <span class="hidden sm:inline text-white/15 mx-0.5">|</span>
           <router-link
             to="/"
-            class="px-2.5 py-1 rounded bg-white/10 hover:bg-[#42b883] text-white transition-colors"
+            class="px-2.5 py-1 rounded bg-white/10 hover:bg-[#42b883] text-white transition-colors whitespace-nowrap"
           >
             返回博客
           </router-link>
@@ -113,24 +128,24 @@
 
       <!-- Interactive Terminal Window -->
       <section
-        class="flex-1 min-h-[540px] rounded-xl border border-white/15 bg-[#121417]/90 shadow-2xl flex flex-col overflow-hidden"
+        class="flex-1 min-h-[420px] sm:min-h-[540px] rounded-xl border border-white/15 bg-[#121417]/90 shadow-2xl flex flex-col overflow-hidden"
         @click="focusInput"
       >
         <!-- Quick Command Chips -->
-        <div class="px-4 py-2.5 border-b border-white/10 bg-white/[0.03] flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex items-center flex-wrap gap-1.5 text-xs font-mono">
-            <span class="text-gray-500 mr-1">快捷体验:</span>
+        <div class="px-3.5 sm:px-4 py-2.5 border-b border-white/10 bg-white/[0.03] flex items-center justify-between gap-2">
+          <div class="flex items-center flex-nowrap sm:flex-wrap gap-1.5 text-xs font-mono overflow-x-auto no-scrollbar min-w-0">
+            <span class="text-gray-500 mr-0.5 shrink-0">快捷体验:</span>
             <button
               v-for="chip in starterChips"
               :key="chip"
               type="button"
-              class="px-2 py-0.5 rounded bg-white/[0.07] hover:bg-[#42b883]/25 text-gray-300 hover:text-[#4fc08d] transition-colors"
+              class="px-2 py-0.5 rounded bg-white/[0.07] hover:bg-[#42b883]/25 text-gray-300 hover:text-[#4fc08d] transition-colors shrink-0"
               @click.stop="runPreset(chip)"
             >
               {{ chip }}
             </button>
           </div>
-          <div class="flex items-center gap-3 text-[11px] font-mono text-gray-500">
+          <div class="flex items-center gap-3 text-[11px] font-mono text-gray-500 shrink-0">
             <button
               v-if="entries.length > 1"
               type="button"
@@ -138,9 +153,9 @@
               title="折叠或展开全部输出 (Ctrl+O)"
               @click.stop="toggleAllCollapse"
             >
-              {{ anyExpanded ? '全部收起' : '全部展开' }} (Ctrl+O)
+              {{ anyExpanded ? '全部收起' : '全部展开' }}<span class="hidden md:inline"> (Ctrl+O)</span>
             </button>
-            <span class="hidden sm:inline">Tab 补全 · Ctrl+L 清屏</span>
+            <span class="hidden lg:inline">Tab 补全 · Ctrl+L 清屏</span>
           </div>
         </div>
 
@@ -222,12 +237,12 @@
         </div>
 
         <!-- Prompt Input Bar + Live Syntax Hint -->
-        <div class="border-t border-white/10 bg-black/35 px-4 sm:px-5 py-3 space-y-1.5">
-          <form class="flex items-center gap-2 font-mono text-sm" @submit.prevent="onSubmit">
-            <span class="text-[#4fc08d] shrink-0">zervan@vilivala</span>
-            <span class="text-gray-500">:</span>
-            <span class="text-sky-400 shrink-0">{{ promptPath }}</span>
-            <span class="text-gray-400">$</span>
+        <div class="border-t border-white/10 bg-black/35 px-3.5 sm:px-5 py-2.5 sm:py-3 space-y-1.5 pb-safe">
+          <form class="flex items-center gap-1.5 sm:gap-2 font-mono text-sm" @submit.prevent="onSubmit">
+            <span class="hidden sm:inline text-[#4fc08d] shrink-0">zervan@vilivala</span>
+            <span class="hidden sm:inline text-gray-500">:</span>
+            <span class="text-sky-400 shrink-0 max-w-[110px] sm:max-w-[220px] truncate">{{ promptPath }}</span>
+            <span class="text-gray-400 shrink-0">$</span>
             <div class="relative flex-1 min-w-0">
               <input
                 ref="inputRef"
@@ -236,8 +251,8 @@
                 autocomplete="off"
                 autocapitalize="off"
                 spellcheck="false"
-                class="w-full bg-transparent text-white placeholder:text-gray-500 focus:outline-none"
-                placeholder="输入命令（如 cd code / hot / timing 25m / varbook 用户配置 / help）…"
+                class="w-full bg-transparent text-[16px] sm:text-sm text-white placeholder:text-gray-500 focus:outline-none"
+                placeholder="输入命令（如 cd code / hot / help）…"
                 @keydown.up.prevent="browseHistory(-1)"
                 @keydown.down.prevent="browseHistory(1)"
                 @keydown.tab.prevent="acceptCompletion"
@@ -246,14 +261,14 @@
               />
               <span
                 v-if="ghostHint"
-                class="pointer-events-none absolute left-0 top-0 text-gray-500/70 select-none whitespace-pre"
+                class="hidden sm:inline pointer-events-none absolute left-0 top-0 text-gray-500/70 select-none whitespace-pre"
               >
                 <span class="invisible">{{ input }}</span>{{ ghostHint }}
               </span>
             </div>
             <button
               type="submit"
-              class="px-3 py-1 rounded bg-[#42b883] hover:bg-[#33a06f] text-white text-xs font-sans transition-colors shrink-0"
+              class="px-3 py-1.5 sm:py-1 rounded bg-[#42b883] hover:bg-[#33a06f] text-white text-xs font-sans transition-colors shrink-0"
             >
               执行
             </button>

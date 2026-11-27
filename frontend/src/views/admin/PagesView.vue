@@ -48,6 +48,7 @@
           v-model="form.content"
           language="zh-CN"
           :theme="theme.isDark ? 'dark' : 'light'"
+          :preview="isWideEditor"
           preview-theme="default"
           style="height: 480px"
           :toolbars-exclude="['github', 'mermaid', 'katex', 'htmlPreview', 'catalog', 'pageFullscreen', 'sub', 'sup', 'prettier', 'save']"
@@ -76,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { adminDeletePage, adminGetPages, adminPutPage, adminUploadImage, getPageBySlug } from '@/api'
@@ -85,6 +86,10 @@ import { useThemeStore } from '@/stores/theme'
 import { toast } from '@/utils/toast'
 
 const theme = useThemeStore()
+const isWideEditor = ref(typeof window !== 'undefined' ? window.innerWidth >= 768 : true)
+function onResize() {
+  isWideEditor.value = window.innerWidth >= 768
+}
 const pages = ref<PageSummary[]>([])
 const activeSlug = ref('')
 const isNew = ref(false)
@@ -154,7 +159,12 @@ async function remove() {
 }
 
 onMounted(async () => {
+  window.addEventListener('resize', onResize, { passive: true })
   await loadList()
   if (pages.value.length) await selectPage(pages.value[0].slug)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
 })
 </script>

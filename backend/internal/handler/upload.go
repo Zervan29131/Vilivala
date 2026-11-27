@@ -11,10 +11,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"vilivala-backend/config"
 )
 
-// UploadDir is where uploaded images are stored (served at /uploads).
-const UploadDir = "uploads"
+// ResolveUploadDir returns the OS-normalized upload directory from config (falling back to "uploads").
+func ResolveUploadDir() string {
+	if config.AppConfig.UploadDir != "" {
+		return filepath.Clean(config.AppConfig.UploadDir)
+	}
+	return "uploads"
+}
 
 const maxUploadBytes = 5 << 20
 
@@ -64,7 +70,7 @@ func AdminUpload(c *gin.Context) {
 	}
 
 	sub := time.Now().Format("200601")
-	dir := filepath.Join(UploadDir, sub)
+	dir := filepath.Join(ResolveUploadDir(), sub)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		Fail(c, http.StatusInternalServerError, 500, "保存失败")
 		return

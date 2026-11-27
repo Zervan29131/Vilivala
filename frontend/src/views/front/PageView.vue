@@ -10,7 +10,7 @@
         <h1 class="text-3xl font-bold text-[#213547] dark:text-white">{{ page.title }}</h1>
         <p class="mt-2 text-xs text-gray-400">最后更新于 {{ formatDate(page.updated_at) }}</p>
       </header>
-      <div class="card p-6 sm:p-10">
+      <div class="card p-4 sm:p-8 lg:p-10">
         <div ref="bodyRef" class="md-body" v-html="html" @click="onBodyClick" />
       </div>
     </article>
@@ -33,6 +33,7 @@ import LoadingState from '@/components/LoadingState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox.vue'
+import { copyText } from '@/utils/clipboard'
 import { attachMarkdownImageFallbacks, renderMarkdown } from '@/utils/markdown'
 import { formatDate } from '@/utils/format'
 import { updatePageMeta } from '@/utils/seo'
@@ -88,11 +89,8 @@ async function onBodyClick(e: MouseEvent) {
     if (id) {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       window.history.replaceState(null, '', `#${encodeURIComponent(id)}`)
-      try {
-        await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(id)}`)
+      if (await copyText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(id)}`)) {
         toast.success('章节链接已复制')
-      } catch {
-        /* ignore */
       }
     }
     return
@@ -101,11 +99,10 @@ async function onBodyClick(e: MouseEvent) {
   const btn = target.closest('.copy-btn') as HTMLButtonElement | null
   if (btn) {
     const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? ''
-    try {
-      await navigator.clipboard.writeText(code)
+    if (await copyText(code)) {
       btn.textContent = '已复制'
       setTimeout(() => (btn.textContent = '复制'), 1500)
-    } catch {
+    } else {
       toast.error('复制失败')
     }
     return

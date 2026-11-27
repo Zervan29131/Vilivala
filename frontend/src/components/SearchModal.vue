@@ -3,7 +3,7 @@
     <transition name="modal-fade">
       <div
         v-if="open"
-        class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-start justify-center pt-[10vh] px-4"
+        class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-start justify-center pt-3 sm:pt-[10vh] px-3 sm:px-4"
         role="dialog"
         aria-modal="true"
         aria-label="全文搜索"
@@ -19,8 +19,8 @@
               ref="inputRef"
               v-model="query"
               type="text"
-              class="flex-1 bg-transparent text-sm sm:text-base text-[#213547] dark:text-white placeholder:text-gray-400 focus:outline-none"
-              placeholder="全文搜索文章标题、摘要或正文…（↑↓ 选择，Enter 打开，Esc 关闭）"
+              class="flex-1 bg-transparent text-[16px] sm:text-base text-[#213547] dark:text-white placeholder:text-gray-400 focus:outline-none"
+              placeholder="搜索文章标题、摘要或正文…"
               @keydown.down.prevent="move(1)"
               @keydown.up.prevent="move(-1)"
               @keydown.enter.prevent="openSelected"
