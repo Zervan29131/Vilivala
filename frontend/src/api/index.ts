@@ -26,6 +26,7 @@ export const getPublishedPosts = (params?: {
   category_id?: number
   tag_id?: number
   keyword?: string
+  sort?: 'views'
 }) => http.get<PaginatedResponse<Post>>('/posts', params)
 
 export const getPostBySlug = (slug: string) => http.get<Post>(`/posts/${slug}`)

@@ -841,9 +841,13 @@
 
 > 轻量元信息注入：当后端配置 `FRONTEND_DIST`（指向构建产物 `dist`）时，服务端在返回 `index.html` 时按路径为 `/posts/:slug` 与 `/pages/:slug` 注入动态 `<title>`、`description`、Open Graph / Twitter Card、`canonical` 及 `application/ld+json`（`BlogPosting`）；前端路由同步更新客户端 meta。
 
-## F. 终端起始页（纯前端）
+## F. 终端起始页（纯前端 + 热榜排序参数）
 
-前端新增 `/terminal` 交互式终端风格浏览器起始页，复用现有 `/api/posts`、`/api/search`、`/api/categories`、`/api/pages` 接口，无新增后端接口。
+前端 `/terminal` 交互式终端风格浏览器起始页升级为完整工作台（虚拟目录树挂载三级分类、命令折叠、历史重放、壁纸自定义及 `hot` / `timing` / `varbook` / `shortcut` 内嵌交互组件）。
+
+为此，`GET /api/posts` 新增可选查询参数 `sort`：
+- 缺省：保持既有 `is_top DESC, created_at DESC, id DESC`
+- `sort=views`：按阅读量倒序 `view_count DESC, id DESC`（供终端 `hot` 热文榜组件拉取 Top 10）
 
 ---
 

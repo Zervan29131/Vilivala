@@ -58,9 +58,13 @@ func listPosts(c *gin.Context, publishedOnly bool) {
 		Fail(c, http.StatusInternalServerError, 500, "查询失败")
 		return
 	}
+	orderClause := postOrder
+	if c.Query("sort") == "views" {
+		orderClause = "view_count DESC, id DESC"
+	}
 	posts := []model.Post{}
 	err := q.Omit("content").Preload("Tags").
-		Order(postOrder).Offset((page - 1) * size).Limit(size).Find(&posts).Error
+		Order(orderClause).Offset((page - 1) * size).Limit(size).Find(&posts).Error
 	if err != nil {
 		Fail(c, http.StatusInternalServerError, 500, "查询失败")
 		return
