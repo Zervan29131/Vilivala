@@ -1,7 +1,10 @@
 package router
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"vilivala-backend/config"
 	"vilivala-backend/internal/handler"
 	"vilivala-backend/internal/middleware"
 )
@@ -15,13 +18,22 @@ func Setup() *gin.Engine {
 
 	r.Static("/uploads", "./"+handler.UploadDir)
 
+	// SEO & feed endpoints
+	r.GET("/robots.txt", handler.RobotsTxt)
+	r.GET("/sitemap.xml", handler.SitemapXML)
+	r.GET("/rss.xml", handler.RSSFeed)
+
+	loginLimiter := middleware.NewRateLimiter(15, 5*time.Minute)
+
 	api := r.Group("/api")
 	{
 		// --- Public routes ---
-		api.POST("/auth/login", handler.Login)
+		api.GET("/health", handler.Health)
+		api.POST("/auth/login", loginLimiter.Middleware("登录尝试过于频繁，请稍后再试"), handler.Login)
 
 		api.GET("/posts", handler.ListPublishedPosts)
 		api.GET("/posts/:slug", handler.GetPostBySlug)
+		api.GET("/search", handler.Search)
 		api.GET("/categories", handler.ListCategories)
 		api.GET("/tags", handler.ListTags)
 		api.GET("/archives", handler.Archives)
@@ -56,6 +68,11 @@ func Setup() *gin.Engine {
 			admin.PUT("/tags/:id", handler.AdminUpdateTag)
 			admin.DELETE("/tags/:id", handler.AdminDeleteTag)
 		}
+	}
+
+	// Optional lightweight SPA + server-side meta injection when FRONTEND_DIST is set
+	if config.AppConfig.FrontendDist != "" {
+		r.NoRoute(handler.ServeSPAWithMeta(config.AppConfig.FrontendDist))
 	}
 
 	return r

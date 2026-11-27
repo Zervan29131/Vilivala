@@ -7,26 +7,40 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "lint": "eslint src",
+    "format:check": "prettier --check \"src/**/*.{ts,vue,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "axios": "^1.7.7",
+    "dompurify": "^3.5.0",
+    "highlight.js": "^11.10.0",
+    "marked": "^12.0.2",
     "md-editor-v3": "^4.17.0",
     "pinia": "^2.2.4",
     "vue": "^3.5.12",
-    "vue-router": "^4.4.5",
-    "marked": "^12.0.2",
-    "highlight.js": "^11.10.0"
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/typography": "^0.5.15",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.7.5",
     "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/test-utils": "^2.6.0",
     "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^9.33.0",
+    "jsdom": "^25.0.1",
     "postcss": "^8.4.47",
+    "prettier": "^3.10.1",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.74.0",
     "vite": "^5.4.9",
+    "vitest": "^2.1.9",
     "vue-tsc": "^2.1.6"
   }
 }

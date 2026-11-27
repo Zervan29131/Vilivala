@@ -5,9 +5,9 @@
       <span class="text-sm text-gray-400">共 {{ totalPosts }} 篇文章</span>
     </div>
 
-    <div v-if="loading" class="space-y-4">
-      <div v-for="i in 3" :key="i" class="card h-32 animate-pulse bg-gray-200/60 dark:bg-white/5" />
-    </div>
+    <LoadingState v-if="loading" :rows="3" />
+    <ErrorState v-else-if="errorMsg" :message="errorMsg" @retry="load" />
+    <EmptyState v-else-if="!archives.length" message="暂无归档文章" />
 
     <div v-else class="space-y-8">
       <section v-for="y in archives" :key="y.year" class="card p-6">
@@ -46,17 +46,27 @@ import { computed, onMounted, ref } from 'vue'
 import { getArchives } from '@/api'
 import type { ArchiveYear } from '@/api/types'
 import { formatDate } from '@/utils/format'
+import LoadingState from '@/components/LoadingState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const archives = ref<ArchiveYear[]>([])
 const loading = ref(true)
+const errorMsg = ref('')
 
 const totalPosts = computed(() => archives.value.reduce((s, y) => s + y.count, 0))
 
-onMounted(async () => {
+async function load() {
+  loading.value = true
+  errorMsg.value = ''
   try {
     archives.value = (await getArchives()).data
+  } catch (err) {
+    errorMsg.value = err instanceof Error ? err.message : '加载归档失败'
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 </script>

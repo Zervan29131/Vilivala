@@ -67,9 +67,9 @@
       v-model="form.content"
       language="zh-CN"
       :theme="theme.isDark ? 'dark' : 'light'"
-      :preview-theme="'default'"
+      preview-theme="default"
       style="height: 560px"
-      :toolbars-exclude="['github']"
+      :toolbars-exclude="['github', 'mermaid', 'katex', 'htmlPreview', 'catalog', 'pageFullscreen', 'sub', 'sup', 'prettier', 'save']"
       @on-upload-img="onUploadImg"
     />
 
@@ -173,19 +173,23 @@ async function save(status: 'draft' | 'published') {
 }
 
 onMounted(async () => {
-  const [c, t] = await Promise.all([getCategories(false), getTags()])
-  categories.value = [...c.data].sort((a, b) => a.path.localeCompare(b.path, 'zh-CN'))
-  tags.value = t.data
-  if (isEdit.value) {
-    const p = (await adminGetPost(id.value)).data
-    form.title = p.title
-    form.slug = p.slug
-    form.summary = p.summary
-    form.content = p.content || ''
-    form.category_id = p.category_id || 0
-    form.is_top = !!p.is_top
-    selectedTags.value = (p.tags || []).map((x) => x.id)
-    originalStatus.value = p.status
+  try {
+    const [c, t] = await Promise.all([getCategories(false), getTags()])
+    categories.value = [...c.data].sort((a, b) => a.path.localeCompare(b.path, 'zh-CN'))
+    tags.value = t.data
+    if (isEdit.value) {
+      const p = (await adminGetPost(id.value)).data
+      form.title = p.title
+      form.slug = p.slug
+      form.summary = p.summary
+      form.content = p.content || ''
+      form.category_id = p.category_id || 0
+      form.is_top = !!p.is_top
+      selectedTags.value = (p.tags || []).map((x) => x.id)
+      originalStatus.value = p.status
+    }
+  } catch {
+    /* handled by interceptor */
   }
 })
 </script>

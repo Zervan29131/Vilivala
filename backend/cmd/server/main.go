@@ -65,7 +65,25 @@ func autoMigrate() error {
 	); err != nil {
 		return err
 	}
+	ensureFulltextIndex()
 	return backfillWordCount()
+}
+
+// ensureFulltextIndex adds a MySQL ngram FULLTEXT index on posts(title, summary, content) if missing.
+func ensureFulltextIndex() {
+	var cnt int64
+	config.DB.Raw(
+		"SELECT COUNT(1) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'posts' AND index_name = 'idx_posts_fulltext'",
+	).Scan(&cnt)
+	if cnt == 0 {
+		if err := config.DB.Exec(
+			"ALTER TABLE posts ADD FULLTEXT INDEX idx_posts_fulltext (title, summary, content) WITH PARSER ngram",
+		).Error; err != nil {
+			log.Printf("[Migration] fulltext index skipped: %v", err)
+		} else {
+			log.Println("[Migration] created FULLTEXT ngram index idx_posts_fulltext")
+		}
+	}
 }
 
 // backfillWordCount fills word_count for posts created before the column existed.

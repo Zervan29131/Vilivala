@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-5xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-[#213547] dark:text-white mb-6">分类目录</h1>
+    <h1 class="text-2xl font-bold text-[#213547] dark:text-white mb-6">分类与标签</h1>
 
     <div class="grid md:grid-cols-3 gap-5 mb-12">
       <div v-for="root in categories" :key="root.id" class="card p-5">

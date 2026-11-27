@@ -61,13 +61,12 @@
             <router-link to="/" class="text-xs text-gray-400 hover:text-[#42b883]">清除搜索</router-link>
           </div>
 
-          <div v-if="loading" class="space-y-4">
-            <div v-for="i in 4" :key="i" class="card h-32 animate-pulse bg-gray-200/60 dark:bg-white/5" />
-          </div>
+          <LoadingState v-if="loading" :rows="4" />
+          <ErrorState v-else-if="errorMsg" :message="errorMsg" @retry="load" />
           <div v-else-if="posts.length" class="space-y-4">
             <PostCard v-for="p in posts" :key="p.id" :post="p" />
           </div>
-          <div v-else class="card p-12 text-center text-gray-400 text-sm">没有找到相关文章</div>
+          <EmptyState v-else message="没有找到相关文章" />
 
           <Pagination :page="page" :page-size="pageSize" :total="total" @change="goPage" />
         </section>
@@ -94,6 +93,9 @@ import { siteConfig } from '@/site.config'
 import PostCard from '@/components/PostCard.vue'
 import Pagination from '@/components/Pagination.vue'
 import SideBar from '@/components/SideBar.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,11 +103,13 @@ const posts = ref<Post[]>([])
 const total = ref(0)
 const pageSize = 10
 const loading = ref(false)
+const errorMsg = ref('')
 
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
 
 async function load() {
   loading.value = true
+  errorMsg.value = ''
   try {
     const res = await getPublishedPosts({
       page: page.value,
@@ -114,6 +118,8 @@ async function load() {
     })
     posts.value = res.data.list
     total.value = res.data.total
+  } catch (err) {
+    errorMsg.value = err instanceof Error ? err.message : '加载文章失败'
   } finally {
     loading.value = false
   }

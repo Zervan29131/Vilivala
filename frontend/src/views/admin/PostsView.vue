@@ -83,29 +83,41 @@ const keyword = ref('')
 
 async function reload(p = page.value) {
   page.value = p
-  const res = await adminGetPosts({
-    page: p,
-    page_size: pageSize,
-    status: status.value || undefined,
-    keyword: keyword.value.trim() || undefined,
-  })
-  posts.value = res.data.list
-  total.value = res.data.total
+  try {
+    const res = await adminGetPosts({
+      page: p,
+      page_size: pageSize,
+      status: status.value || undefined,
+      keyword: keyword.value.trim() || undefined,
+    })
+    posts.value = res.data.list
+    total.value = res.data.total
+  } catch {
+    /* handled by request interceptor */
+  }
 }
 
 async function toggle(p: Post) {
   const next = p.status === 'published' ? 'draft' : 'published'
-  await adminUpdatePostStatus(p.id, next)
-  toast.success(next === 'published' ? '已发布' : '已转为草稿')
-  await reload()
+  try {
+    await adminUpdatePostStatus(p.id, next)
+    toast.success(next === 'published' ? '已发布' : '已转为草稿')
+    await reload()
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 async function remove(p: Post) {
   if (!confirm(`确定删除《${p.title}》吗？此操作不可恢复。`)) return
-  await adminDeletePost(p.id)
-  toast.success('已删除')
-  if (posts.value.length === 1 && page.value > 1) page.value--
-  await reload()
+  try {
+    await adminDeletePost(p.id)
+    toast.success('已删除')
+    if (posts.value.length === 1 && page.value > 1) page.value--
+    await reload()
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 onMounted(() => reload(1))

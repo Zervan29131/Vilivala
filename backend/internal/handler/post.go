@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -78,10 +79,76 @@ type postLink struct {
 	Slug  string `json:"slug"`
 }
 
+type relatedPost struct {
+	ID          uint      `json:"id"`
+	Title       string    `json:"title"`
+	Slug        string    `json:"slug"`
+	Summary     string    `json:"summary"`
+	ReadingTime int       `json:"reading_time"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type postDetail struct {
 	model.Post
-	Prev *postLink `json:"prev"`
-	Next *postLink `json:"next"`
+	Prev    *postLink     `json:"prev"`
+	Next    *postLink     `json:"next"`
+	Related []relatedPost `json:"related"`
+}
+
+// relatedPosts scores published posts by shared tags (+2 each) and same category (+1).
+func relatedPosts(current model.Post, limit int) []relatedPost {
+	var candidates []model.Post
+	config.DB.Model(&model.Post{}).
+		Select("id, title, slug, summary, word_count, category_id, created_at").
+		Preload("Tags").
+		Where("status = ? AND id <> ?", "published", current.ID).
+		Find(&candidates)
+
+	tagSet := make(map[uint]bool, len(current.Tags))
+	for _, t := range current.Tags {
+		tagSet[t.ID] = true
+	}
+
+	type scored struct {
+		post  model.Post
+		score int
+	}
+	list := make([]scored, 0, len(candidates))
+	for _, cand := range candidates {
+		score := 0
+		if current.CategoryID != nil && cand.CategoryID != nil && *current.CategoryID == *cand.CategoryID {
+			score += 1
+		}
+		for _, t := range cand.Tags {
+			if tagSet[t.ID] {
+				score += 2
+			}
+		}
+		list = append(list, scored{post: cand, score: score})
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].score != list[j].score {
+			return list[i].score > list[j].score
+		}
+		return list[i].post.CreatedAt.After(list[j].post.CreatedAt)
+	})
+
+	if len(list) > limit {
+		list = list[:limit]
+	}
+	out := make([]relatedPost, 0, len(list))
+	for _, item := range list {
+		out = append(out, relatedPost{
+			ID:          item.post.ID,
+			Title:       item.post.Title,
+			Slug:        item.post.Slug,
+			Summary:     item.post.Summary,
+			ReadingTime: model.ReadingMinutes(item.post.WordCount),
+			CreatedAt:   item.post.CreatedAt,
+		})
+	}
+	return out
 }
 
 // neighbours finds the previous (older) and next (newer) published posts under postOrder.
@@ -127,6 +194,7 @@ func GetPostBySlug(c *gin.Context) {
 	fillCategories(ps)
 	d := postDetail{Post: ps[0]}
 	d.Prev, d.Next = neighbours(p.ID)
+	d.Related = relatedPosts(p, 4)
 	OK(c, d)
 }
 
@@ -312,7 +380,7 @@ func AdminUpdatePostStatus(c *gin.Context) {
 	OK(c, nil)
 }
 
-// Archives GET /api/archives — published posts grouped by year and month.
+// Archives GET /api/archives — published posts grouped by year and month (strictly chronological).
 func Archives(c *gin.Context) {
 	var rows []struct {
 		ID        uint      `json:"id"`
@@ -321,7 +389,7 @@ func Archives(c *gin.Context) {
 		CreatedAt time.Time `json:"created_at"`
 	}
 	config.DB.Model(&model.Post{}).Select("id, title, slug, created_at").
-		Where("status = ?", "published").Order(postOrder).Find(&rows)
+		Where("status = ?", "published").Order("created_at DESC, id DESC").Find(&rows)
 
 	type item struct {
 		ID        uint      `json:"id"`

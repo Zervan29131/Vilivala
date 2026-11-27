@@ -53,6 +53,29 @@ export interface PostLink {
   slug: string
 }
 
+export interface RelatedPost {
+  id: number
+  title: string
+  slug: string
+  summary: string
+  reading_time: number
+  created_at: string
+}
+
+export interface SearchResultItem {
+  id: number
+  title: string
+  slug: string
+  snippet: string
+  category_name: string
+  created_at: string
+}
+
+export interface SearchResponse {
+  list: SearchResultItem[]
+  total: number
+}
+
 export interface Post {
   id: number
   title: string
@@ -70,6 +93,7 @@ export interface Post {
   tags?: Tag[]
   prev?: PostLink | null
   next?: PostLink | null
+  related?: RelatedPost[]
   created_at: string
   updated_at: string
 }

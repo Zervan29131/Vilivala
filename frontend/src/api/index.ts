@@ -7,6 +7,7 @@ import type {
   ArchiveYear,
   PageSummary,
   PageDetail,
+  SearchResponse,
   UploadResult,
   LoginPayload,
   LoginResponse,
@@ -26,6 +27,8 @@ export const getPublishedPosts = (params?: {
 }) => http.get<PaginatedResponse<Post>>('/posts', params)
 
 export const getPostBySlug = (slug: string) => http.get<Post>(`/posts/${slug}`)
+export const searchPosts = (q: string, limit = 12) =>
+  http.get<SearchResponse>('/search', { q, limit })
 export const getCategories = (tree = false) =>
   http.get<Category[]>('/categories', tree ? { tree: 1 } : undefined)
 export const getTags = () => http.get<Tag[]>('/tags')

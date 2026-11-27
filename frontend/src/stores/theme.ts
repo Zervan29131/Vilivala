@@ -13,7 +13,16 @@ export const useThemeStore = defineStore('theme', () => {
   )
 
   function apply() {
-    document.documentElement.classList.toggle('dark', isDark.value)
+    const dark = isDark.value
+    document.documentElement.classList.toggle('dark', dark)
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+    let meta = document.head.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = dark ? '#1a1a1a' : '#f6f6f7'
   }
 
   function setMode(next: ThemeMode) {

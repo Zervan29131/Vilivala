@@ -27,7 +27,7 @@
       </div>
 
       <!-- Page Editor -->
-      <div class="card p-5 space-y-4">
+      <div class="card p-5 space-y-4 min-w-0">
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Slug（仅小写字母、数字、连字符）</label>
@@ -48,8 +48,9 @@
           v-model="form.content"
           language="zh-CN"
           :theme="theme.isDark ? 'dark' : 'light'"
+          preview-theme="default"
           style="height: 480px"
-          :toolbars-exclude="['github']"
+          :toolbars-exclude="['github', 'mermaid', 'katex', 'htmlPreview', 'catalog', 'pageFullscreen', 'sub', 'sup', 'prettier', 'save']"
           @on-upload-img="onUploadImg"
         />
 
@@ -91,16 +92,24 @@ const saving = ref(false)
 const form = reactive({ slug: '', title: '', content: '' })
 
 async function loadList() {
-  pages.value = (await adminGetPages()).data
+  try {
+    pages.value = (await adminGetPages()).data
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 async function selectPage(slug: string) {
   isNew.value = false
   activeSlug.value = slug
-  const d = (await getPageBySlug(slug)).data
-  form.slug = d.slug
-  form.title = d.title
-  form.content = d.content
+  try {
+    const d = (await getPageBySlug(slug)).data
+    form.slug = d.slug
+    form.title = d.title
+    form.content = d.content
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 function startNew() {

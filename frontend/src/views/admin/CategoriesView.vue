@@ -80,7 +80,11 @@ const parentOptions = computed(() =>
 )
 
 async function load() {
-  tree.value = (await getCategories(true)).data
+  try {
+    tree.value = (await getCategories(true)).data
+  } catch {
+    /* handled by interceptor */
+  }
 }
 
 function reset() {

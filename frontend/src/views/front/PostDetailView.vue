@@ -1,9 +1,10 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 py-8">
-    <div v-if="loading" class="max-w-3xl mx-auto card h-72 animate-pulse bg-gray-200/60 dark:bg-white/5" />
-    <div v-else-if="!post" class="text-center py-20 text-gray-400">
-      文章不存在 · <router-link to="/" class="text-[#42b883]">返回首页</router-link>
-    </div>
+    <LoadingState v-if="loading" :rows="1" height-class="h-72 max-w-3xl mx-auto" />
+    <ErrorState v-else-if="errorMsg" :message="errorMsg" show-home @retry="retryLoad" />
+    <EmptyState v-else-if="!post" message="文章不存在或已下架">
+      <router-link to="/" class="inline-block mt-2 text-sm text-[#42b883] hover:underline">返回首页</router-link>
+    </EmptyState>
 
     <!-- Vue-docs style: Left sticky TOC + Right main content -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
@@ -79,7 +80,7 @@
         </header>
 
         <div class="card p-6 sm:p-10">
-          <div class="md-body" v-html="html" @click="onBodyClick" />
+          <div ref="bodyRef" class="md-body" v-html="html" @click="onBodyClick" />
         </div>
 
         <!-- Prev / Next Navigation -->
@@ -107,8 +108,40 @@
             </div>
           </router-link>
         </nav>
+
+        <!-- Related Posts -->
+        <section v-if="post.related?.length" class="mt-8">
+          <h2 class="text-base font-bold text-[#213547] dark:text-white mb-3">相关推荐</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <router-link
+              v-for="r in post.related"
+              :key="r.id"
+              :to="`/posts/${r.slug}`"
+              class="card p-4 hover:border-[#42b883] transition-colors group flex flex-col justify-between gap-2"
+            >
+              <div>
+                <div class="text-sm font-semibold text-[#213547] dark:text-gray-100 group-hover:text-[#42b883] line-clamp-1">
+                  {{ r.title }}
+                </div>
+                <p v-if="r.summary" class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                  {{ r.summary }}
+                </p>
+              </div>
+              <div class="text-[11px] text-gray-400 font-mono">
+                {{ formatDate(r.created_at) }} · 约 {{ r.reading_time || 1 }} 分钟
+              </div>
+            </router-link>
+          </div>
+        </section>
       </article>
     </div>
+
+    <ImageLightbox
+      :open="lightboxOpen"
+      :images="lightboxImages"
+      :start-index="lightboxIndex"
+      @close="lightboxOpen = false"
+    />
   </div>
 </template>
 
@@ -117,17 +150,27 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPostBySlug } from '@/api'
 import type { Post } from '@/api/types'
-import { siteConfig } from '@/site.config'
+import LoadingState from '@/components/LoadingState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox.vue'
 import { renderMarkdown, type TocItem } from '@/utils/markdown'
 import { formatDate } from '@/utils/format'
+import { updatePageMeta } from '@/utils/seo'
 import { toast } from '@/utils/toast'
 
 const route = useRoute()
+const bodyRef = ref<HTMLElement | null>(null)
 const post = ref<Post | null>(null)
 const html = ref('')
 const toc = ref<TocItem[]>([])
 const loading = ref(true)
+const errorMsg = ref('')
 const active = ref('')
+
+const lightboxOpen = ref(false)
+const lightboxImages = ref<LightboxImage[]>([])
+const lightboxIndex = ref(0)
 
 let observer: IntersectionObserver | null = null
 
@@ -144,17 +187,31 @@ function observeHeadings() {
 
 async function load(slug: string) {
   loading.value = true
+  errorMsg.value = ''
   post.value = null
   try {
     const res = await getPostBySlug(slug)
     post.value = res.data
-    const r = renderMarkdown(res.data.content || '')
+    const r = renderMarkdown(res.data.content || '', { stripLeadingTitle: res.data.title })
     html.value = r.html
     toc.value = r.toc
     active.value = r.toc[0]?.id ?? ''
-    document.title = `${res.data.title} - ${siteConfig.title}`
-  } catch {
-    post.value = null
+    updatePageMeta({
+      title: res.data.title,
+      description: res.data.summary || res.data.title,
+      path: `/posts/${res.data.slug}`,
+      type: 'article',
+      publishedAt: res.data.created_at,
+      updatedAt: res.data.updated_at,
+      tags: res.data.tags?.map((t) => t.name),
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('不存在')) {
+      post.value = null
+    } else {
+      errorMsg.value = msg || '加载文章失败，请重试'
+    }
   } finally {
     loading.value = false
   }
@@ -162,21 +219,45 @@ async function load(slug: string) {
   observeHeadings()
 }
 
+function retryLoad() {
+  const s = route.params.slug as string
+  if (s) load(s)
+}
+
 function jump(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.getElementById(id)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+  window.history.replaceState(null, '', `#${encodeURIComponent(id)}`)
   active.value = id
 }
 
 async function onBodyClick(e: MouseEvent) {
-  const btn = (e.target as HTMLElement).closest('.copy-btn') as HTMLButtonElement | null
-  if (!btn) return
-  const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? ''
-  try {
-    await navigator.clipboard.writeText(code)
-    btn.textContent = '已复制'
-    setTimeout(() => (btn.textContent = '复制'), 1500)
-  } catch {
-    toast.error('复制失败')
+  const target = e.target as HTMLElement
+
+  // Code copy button
+  const btn = target.closest('.copy-btn') as HTMLButtonElement | null
+  if (btn) {
+    const code = btn.closest('.code-block')?.querySelector('code')?.textContent ?? ''
+    try {
+      await navigator.clipboard.writeText(code)
+      btn.textContent = '已复制'
+      setTimeout(() => (btn.textContent = '复制'), 1500)
+    } catch {
+      toast.error('复制失败')
+    }
+    return
+  }
+
+  // Image lightbox
+  const img = target.closest('img') as HTMLImageElement | null
+  if (img && bodyRef.value) {
+    const imgs = Array.from(bodyRef.value.querySelectorAll('img'))
+    const idx = imgs.indexOf(img)
+    if (idx >= 0) {
+      lightboxImages.value = imgs.map((el) => ({ src: el.src, alt: el.alt || '' }))
+      lightboxIndex.value = idx
+      lightboxOpen.value = true
+    }
   }
 }
 

@@ -65,6 +65,7 @@
 .md-body blockquote { @apply my-5 pl-4 py-1.5 border-l-4 border-[#42b883] bg-[#42b883]/5 dark:bg-[#42b883]/10 text-gray-600 dark:text-gray-300 rounded-r-lg; }
 .md-body blockquote p { @apply my-1; }
 .md-body img { @apply rounded-lg my-4 max-w-full border border-gray-200/60 dark:border-white/10; }
+.md-body img[data-lightbox="true"] { @apply cursor-zoom-in transition-opacity hover:opacity-95; }
 .md-body hr { @apply my-8 border-gray-200 dark:border-white/10; }
 .md-body :not(pre) > code { @apply px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-[#35495e] dark:text-[#4fc08d] text-[0.88em] font-mono; }
 .md-body table { @apply w-full my-5 text-sm border-collapse block overflow-x-auto; }
@@ -95,3 +96,39 @@
 .dark .hljs-title, .dark .hljs-section, .dark .hljs-title.function_, .dark .hljs-title.class_ { color: #d2a8ff; }
 .dark .hljs-built_in, .dark .hljs-type, .dark .hljs-name, .dark .hljs-tag { color: #7ee787; }
 .dark .hljs-variable, .dark .hljs-template-variable, .dark .hljs-params { color: #ffa657; }
+
+/* md-editor-v3 dark preview contrast & toolbar wrapping */
+.md-editor-toolbar-wrapper .md-editor-toolbar {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+.md-editor-toolbar-wrapper {
+  height: auto !important;
+  min-height: 35px;
+}
+.md-editor-dark {
+  --md-bk-color: #1e1e1e;
+  --md-color: #e5e7eb;
+}
+.md-editor-dark .md-editor-preview-wrapper {
+  background-color: #1e1e1e;
+}
+.md-editor-dark .md-editor-preview,
+.md-editor-dark .md-editor-preview p,
+.md-editor-dark .md-editor-preview li,
+.md-editor-dark .md-editor-preview h1,
+.md-editor-dark .md-editor-preview h2,
+.md-editor-dark .md-editor-preview h3 {
+  color: #e5e7eb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -13,11 +13,16 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	DBDsn      string
-	ServerPort string
-	JWTSecret  string
-	JWTExpires string
-	GinMode    string
+	DBDsn              string
+	ServerPort         string
+	JWTSecret          string
+	JWTExpires         string
+	GinMode            string
+	SiteURL            string
+	SiteTitle          string
+	SiteDescription    string
+	CORSAllowedOrigins string
+	FrontendDist       string
 }
 
 // AppConfig is the global config instance
@@ -34,11 +39,16 @@ func Load() {
 	}
 
 	AppConfig = Config{
-		DBDsn:      getEnv("DB_DSN", "bloguser:blogpass123@tcp(127.0.0.1:3306)/personal_blog?charset=utf8mb4&parseTime=True&loc=Local"),
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		JWTSecret:  getEnv("JWT_SECRET", "vilivala-super-secret-key-change-in-production"),
-		JWTExpires: getEnv("JWT_EXPIRES_IN", "86400"),
-		GinMode:    getEnv("GIN_MODE", "debug"),
+		DBDsn:              getEnv("DB_DSN", "bloguser:blogpass123@tcp(127.0.0.1:3306)/personal_blog?charset=utf8mb4&parseTime=True&loc=Local"),
+		ServerPort:         getEnv("SERVER_PORT", "8080"),
+		JWTSecret:          getEnv("JWT_SECRET", "vilivala-super-secret-key-change-in-production"),
+		JWTExpires:         getEnv("JWT_EXPIRES_IN", "86400"),
+		GinMode:            getEnv("GIN_MODE", "debug"),
+		SiteURL:            getEnv("SITE_URL", "http://localhost:5173"),
+		SiteTitle:          getEnv("SITE_TITLE", "Zervan的小站"),
+		SiteDescription:    getEnv("SITE_DESCRIPTION", "这是存在于某处的幻想世界 · Zervanのblog"),
+		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),
+		FrontendDist:       getEnv("FRONTEND_DIST", ""),
 	}
 
 	log.Printf("[Config] Server port: %s | GinMode: %s", AppConfig.ServerPort, AppConfig.GinMode)

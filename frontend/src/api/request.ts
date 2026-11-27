@@ -17,7 +17,7 @@ function handleUnauthorized() {
     toast.error('登录已过期，请重新登录')
   }
   if (router.currentRoute.value.path !== '/admin/login') {
-    router.push('/admin/login')
+    router.replace('/admin/login')
   }
 }
 

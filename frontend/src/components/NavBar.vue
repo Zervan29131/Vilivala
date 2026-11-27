@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-40 bg-white/85 dark:bg-[#1a1a1a]/85 backdrop-blur-md border-b border-gray-200/80 dark:border-white/10">
+  <header class="sticky top-0 z-40 nav-blur border-b border-gray-200/80 dark:border-white/10">
     <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
       <!-- Brand -->
       <router-link to="/" class="flex items-center gap-2.5 shrink-0 group">
@@ -9,17 +9,25 @@
         </span>
       </router-link>
 
-      <!-- Search (desktop) -->
+      <!-- Search (desktop: supports both direct submit & Ctrl+K overlay modal) -->
       <form class="hidden md:flex items-center flex-1 max-w-xs" @submit.prevent="submitSearch">
         <div class="relative w-full">
           <input
             v-model="kw"
-            class="w-full pl-9 pr-3 py-1.5 text-sm rounded-full bg-gray-100/90 dark:bg-white/10 text-[#213547] dark:text-gray-100 placeholder:text-gray-400 border border-transparent focus:border-[#42b883] focus:bg-white dark:focus:bg-[#242424] focus:outline-none transition"
+            class="w-full pl-9 pr-14 py-1.5 text-sm rounded-full bg-gray-100/90 dark:bg-white/10 text-[#213547] dark:text-gray-100 placeholder:text-gray-400 border border-transparent focus:border-[#42b883] focus:bg-white dark:focus:bg-[#242424] focus:outline-none transition"
             placeholder="搜索文章、关键词…"
           />
           <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z" />
           </svg>
+          <button
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/80 dark:bg-white/10 border border-gray-200 dark:border-white/15 text-gray-400 hover:text-[#42b883] hover:border-[#42b883] transition-colors"
+            title="打开全文检索浮层 (Ctrl+K / ⌘K)"
+            @click="$emit('open-search')"
+          >
+            ⌘K
+          </button>
         </div>
       </form>
 
@@ -28,11 +36,7 @@
         <router-link to="/" class="nav-item" exact-active-class="nav-active">首页</router-link>
 
         <!-- Dynamic 3-level category dropdowns -->
-        <div
-          v-for="root in topCategories"
-          :key="root.id"
-          class="relative group"
-        >
+        <div v-for="root in topCategories" :key="root.id" class="relative group">
           <router-link
             :to="`/categories/${root.slug}`"
             class="nav-item inline-flex items-center gap-1"
@@ -103,9 +107,20 @@
               <router-link to="/pages/links" class="drop-link">友情链接</router-link>
               <router-link to="/pages/changelog" class="drop-link">更新日志</router-link>
               <router-link to="/pages/sponsor" class="drop-link">赞助支持</router-link>
+              <a href="/rss.xml" target="_blank" rel="noopener" class="drop-link">RSS 订阅</a>
             </div>
           </div>
         </div>
+
+        <!-- Terminal Browser Start Page Entry -->
+        <router-link
+          to="/terminal"
+          class="nav-item font-mono text-xs inline-flex items-center gap-1"
+          title="终端风格浏览器起始页"
+        >
+          <span class="text-[#42b883]">&gt;_</span>
+          <span>终端</span>
+        </router-link>
 
         <router-link to="/admin" class="nav-item">后台</router-link>
 
@@ -123,6 +138,16 @@
 
       <!-- Mobile Actions -->
       <div class="flex lg:hidden items-center gap-1">
+        <button
+          type="button"
+          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
+          aria-label="打开搜索"
+          @click="$emit('open-search')"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z" />
+          </svg>
+        </button>
         <button
           type="button"
           class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
@@ -163,6 +188,7 @@
         </router-link>
         <router-link to="/archives" class="drop-link" @click="mobileOpen = false">时间归档</router-link>
         <router-link to="/categories" class="drop-link" @click="mobileOpen = false">分类与标签</router-link>
+        <router-link to="/terminal" class="drop-link font-mono" @click="mobileOpen = false">&gt;_ 终端起始页</router-link>
         <router-link to="/pages/about" class="drop-link" @click="mobileOpen = false">关于</router-link>
         <router-link to="/pages/links" class="drop-link" @click="mobileOpen = false">友情链接</router-link>
         <router-link to="/pages/sponsor" class="drop-link" @click="mobileOpen = false">赞助支持</router-link>
@@ -179,6 +205,8 @@ import { getCategories } from '@/api'
 import type { Category } from '@/api/types'
 import { siteConfig } from '@/site.config'
 import { useThemeStore } from '@/stores/theme'
+
+defineEmits<{ 'open-search': [] }>()
 
 const route = useRoute()
 const router = useRouter()
@@ -211,7 +239,6 @@ watch(
 onMounted(async () => {
   try {
     const res = await getCategories(true)
-    // Order: code, ToRead, fun first if present
     const order = ['code', 'toread', 'fun']
     topCategories.value = [...res.data].sort((a, b) => {
       const ia = order.indexOf(a.slug.toLowerCase())
@@ -225,6 +252,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.nav-blur {
+  @apply bg-white/95 dark:bg-[#1a1a1a]/95;
+}
+@supports (backdrop-filter: blur(12px)) {
+  .nav-blur {
+    @apply bg-white/85 dark:bg-[#1a1a1a]/85 backdrop-blur-md;
+  }
+}
 .nav-item {
   @apply px-3 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-[#42b883] dark:hover:text-[#4fc08d] transition-colors;
 }

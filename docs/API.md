@@ -764,6 +764,89 @@
 
 ---
 
+# v1.1.1 体验、搜索与 SEO 升级（本轮实现）
+
+> 对应 `docs/UPGRADE_PLAN.md` 的 P0 + P1（不含 v1.2 评论与账号体系）。
+
+## A. 归档排序修正
+
+**GET** `/api/archives` 组内排序改为严格按发布时间倒序：`created_at DESC, id DESC`（不再因 `is_top` 打乱时间线）。
+
+## B. 登录限流
+
+**POST** `/api/auth/login` 增加按客户端 IP 的固定窗口限流：每 5 分钟最多 15 次请求；超出返回 HTTP `429`：
+
+```json
+{ "code": 429, "message": "登录尝试过于频繁，请稍后再试", "data": null }
+```
+
+## C. 相关文章推荐（变更：`GET /api/posts/:slug`）
+
+`GET /api/posts/:slug` 的 `data` 新增 `related` 数组（最多 4 篇，按相关性与发布时间降序；仅已发布文章、排除当前文章）：
+
+```json
+"related": [
+  {
+    "id": 12,
+    "title": "相关文章标题",
+    "slug": "related-slug",
+    "summary": "摘要...",
+    "reading_time": 4,
+    "created_at": "2022-02-20T10:00:00+08:00"
+  }
+]
+```
+
+相关性评分：每个共同标签 `+2`，同一分类 `+1`；若无共同标签或分类则按最新已发布文章补足。
+
+## D. 全文搜索（新增）
+
+**GET** `/api/search`（公开）
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `q` | — | 搜索关键词（必填，去空白后为空返回空列表） |
+| `limit` | `12` | 返回条数，范围 `1–30` |
+
+数据库在 `posts(title, summary, content)` 建立 MySQL `FULLTEXT`（`WITH PARSER ngram`）索引；短词或全文检索无命中时自动降级为 `LIKE` 匹配。
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "list": [
+      {
+        "id": 1,
+        "title": "Git实际操作",
+        "slug": "c6d7d3",
+        "snippet": "……使用 git commit 提交更改……",
+        "category_name": "博客开发指南",
+        "created_at": "2022-02-24T10:00:00+08:00"
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+## E. SEO、订阅与健康检查端点（公开）
+
+| 路径 | Content-Type | 说明 |
+|------|--------------|------|
+| **GET** `/api/health` | `application/json` | 健康检查，返回 `{ "code": 0, "message": "ok", "data": { "status": "ok" } }` |
+| **GET** `/robots.txt` | `text/plain` | 允许抓取公开页，禁止 `/admin`，声明 `Sitemap` 地址 |
+| **GET** `/sitemap.xml` | `application/xml` | 动态站点地图（首页、归档、分类、独立页、全部已发布文章） |
+| **GET** `/rss.xml` | `application/rss+xml` | 标准 RSS 2.0 订阅源（最近 30 篇已发布文章） |
+
+> 轻量元信息注入：当后端配置 `FRONTEND_DIST`（指向构建产物 `dist`）时，服务端在返回 `index.html` 时按路径为 `/posts/:slug` 与 `/pages/:slug` 注入动态 `<title>`、`description`、Open Graph / Twitter Card、`canonical` 及 `application/ld+json`（`BlogPosting`）；前端路由同步更新客户端 meta。
+
+## F. 终端起始页（纯前端）
+
+前端新增 `/terminal` 交互式终端风格浏览器起始页，复用现有 `/api/posts`、`/api/search`、`/api/categories`、`/api/pages` 接口，无新增后端接口。
+
+---
+
 # v1.2 规划（⏸ 暂缓，尚未实现，勿按此开发）
 
 > 该部分已评审但**搁置**，待内容迁移与界面重做完成后再启动。其中「关于页」「图片上传」已被上面的 v1.1 独立页面 / 上传接口取代。

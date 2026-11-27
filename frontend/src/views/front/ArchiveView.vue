@@ -40,13 +40,12 @@
           </router-link>
         </div>
 
-        <div v-if="loading" class="space-y-4">
-          <div v-for="i in 3" :key="i" class="card h-32 animate-pulse bg-gray-200/60 dark:bg-white/5" />
-        </div>
+        <LoadingState v-if="loading" :rows="3" />
+        <ErrorState v-else-if="errorMsg" :message="errorMsg" @retry="load" />
         <div v-else-if="posts.length" class="space-y-4">
           <PostCard v-for="p in posts" :key="p.id" :post="p" />
         </div>
-        <div v-else class="card p-12 text-center text-gray-400 text-sm">该目录下暂无文章</div>
+        <EmptyState v-else message="该目录下暂无文章" />
 
         <Pagination :page="page" :page-size="pageSize" :total="total" @change="goPage" />
       </section>
@@ -64,6 +63,9 @@ import type { Category, Post } from '@/api/types'
 import PostCard from '@/components/PostCard.vue'
 import Pagination from '@/components/Pagination.vue'
 import SideBar from '@/components/SideBar.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const props = defineProps<{ filterType: 'category' | 'tag'; filterSlug: string }>()
 
@@ -73,6 +75,7 @@ const posts = ref<Post[]>([])
 const total = ref(0)
 const pageSize = 10
 const loading = ref(false)
+const errorMsg = ref('')
 const heading = ref('')
 const breadcrumb = ref<Category[]>([])
 const childCategories = ref<Category[]>([])
@@ -93,6 +96,7 @@ function findInTree(nodes: Category[], slug: string, chain: Category[] = []): { 
 
 async function load() {
   loading.value = true
+  errorMsg.value = ''
   breadcrumb.value = []
   childCategories.value = []
   try {
@@ -128,6 +132,8 @@ async function load() {
     const res = await getPublishedPosts(params)
     posts.value = res.data.list
     total.value = res.data.total
+  } catch (err) {
+    errorMsg.value = err instanceof Error ? err.message : '加载列表失败'
   } finally {
     loading.value = false
   }

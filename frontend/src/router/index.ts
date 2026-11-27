@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { siteConfig } from '@/site.config'
+import { updatePageMeta } from '@/utils/seo'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -26,6 +27,11 @@ const router = createRouter({
         },
         { path: 'pages/:slug', component: () => import('@/views/front/PageView.vue') },
       ],
+    },
+    // ---- Terminal browser start page ----
+    {
+      path: '/terminal',
+      component: () => import('@/views/front/TerminalView.vue'),
     },
     // ---- Admin routes ----
     {
@@ -70,8 +76,17 @@ router.beforeEach((to, _from, next) => {
 })
 
 router.afterEach((to) => {
-  if (!to.path.startsWith('/posts/') && !to.path.startsWith('/pages/')) {
-    document.title = siteConfig.title
+  if (!to.path.startsWith('/posts/') && !to.path.startsWith('/pages/') && to.path !== '/terminal') {
+    const titleMap: Record<string, string> = {
+      '/archives': '时间归档',
+      '/categories': '分类与标签',
+      '/admin/login': '后台登录',
+    }
+    updatePageMeta({
+      title: titleMap[to.path],
+      description: `${siteConfig.hero.title} · ${siteConfig.description}`,
+      path: to.path,
+    })
   }
 })
 

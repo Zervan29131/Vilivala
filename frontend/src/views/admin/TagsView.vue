@@ -50,7 +50,11 @@ const editingId = ref<number | null>(null)
 const form = reactive({ name: '', slug: '' })
 
 async function load() {
-  items.value = (await getTags()).data
+  try {
+    items.value = (await getTags()).data
+  } catch {
+    /* handled by interceptor */
+  }
 }
 function reset() {
   editingId.value = null
