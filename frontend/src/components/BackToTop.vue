@@ -3,7 +3,7 @@
     <button
       v-if="visible"
       type="button"
-      class="fixed bottom-[4.25rem] right-5 z-30 w-10 h-10 rounded-full bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-200 hover:scale-105 hover:border-[#42b883] hover:text-[#42b883] transition"
+      class="fixed floating-safe-stack right-3.5 sm:right-5 z-30 w-10 h-10 rounded-full bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-white/15 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-200 hover:scale-105 hover:border-[#42b883] hover:text-[#42b883] transition"
       title="回到顶部"
       aria-label="回到顶部"
       @click="scrollToTop"

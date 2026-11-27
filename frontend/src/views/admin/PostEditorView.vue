@@ -67,6 +67,7 @@
       v-model="form.content"
       language="zh-CN"
       :theme="theme.isDark ? 'dark' : 'light'"
+      :preview="isWideEditor"
       preview-theme="default"
       style="height: 560px"
       :toolbars-exclude="['github', 'mermaid', 'katex', 'htmlPreview', 'catalog', 'pageFullscreen', 'sub', 'sup', 'prettier', 'save']"
@@ -91,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
@@ -112,6 +113,10 @@ import { toast } from '@/utils/toast'
 const route = useRoute()
 const router = useRouter()
 const theme = useThemeStore()
+const isWideEditor = ref(typeof window !== 'undefined' ? window.innerWidth >= 768 : true)
+function onResize() {
+  isWideEditor.value = window.innerWidth >= 768
+}
 
 const id = computed(() => (route.params.id ? Number(route.params.id) : 0))
 const isEdit = computed(() => id.value > 0)
@@ -181,6 +186,7 @@ async function save(status: 'draft' | 'published') {
 }
 
 onMounted(async () => {
+  window.addEventListener('resize', onResize, { passive: true })
   try {
     const [c, t] = await Promise.all([getCategories(false), getTags()])
     categories.value = [...c.data].sort((a, b) => a.path.localeCompare(b.path, 'zh-CN'))
@@ -199,6 +205,10 @@ onMounted(async () => {
   } catch {
     /* handled by interceptor */
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
 })
 </script>
 

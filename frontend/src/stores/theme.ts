@@ -37,11 +37,17 @@ export const useThemeStore = defineStore('theme', () => {
     setMode(next)
   }
 
-  // Listen for OS theme changes
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  // Listen for OS theme changes (with Safari < 14 addListener fallback)
+  const mql = window.matchMedia('(prefers-color-scheme: dark)')
+  const onSystemChange = (e: MediaQueryListEvent) => {
     systemDark.value = e.matches
     if (mode.value === 'system') apply()
-  })
+  }
+  if (typeof mql.addEventListener === 'function') {
+    mql.addEventListener('change', onSystemChange)
+  } else if (typeof mql.addListener === 'function') {
+    mql.addListener(onSystemChange)
+  }
 
   apply()
 

@@ -74,7 +74,7 @@
           <div
             v-for="(s, idx) in form.socials"
             :key="idx"
-            class="grid grid-cols-[130px_1fr_auto] gap-2 items-center"
+            class="grid grid-cols-1 sm:grid-cols-[130px_1fr_auto] gap-2 items-center p-2.5 sm:p-0 rounded-lg border border-gray-100 dark:border-white/10 sm:border-0"
           >
             <input v-model="s.title" class="input-field" placeholder="名称（如 知乎）" />
             <input v-model="s.link" class="input-field font-mono text-xs" placeholder="https://... 或 mailto:..." />

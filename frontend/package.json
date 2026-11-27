@@ -13,6 +13,16 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "not dead",
+    "Chrome >= 88",
+    "Edge >= 88",
+    "Firefox >= 90",
+    "Safari >= 14",
+    "iOS >= 14"
+  ],
   "dependencies": {
     "axios": "^1.7.7",
     "dompurify": "^3.5.0",

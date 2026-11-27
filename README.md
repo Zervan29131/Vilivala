@@ -75,6 +75,38 @@ npm run dev              # http://localhost:5173
 
 `.env` 已加入 `.gitignore`，不会提交密码。
 
+## 跨平台迁移与部署（Linux / Windows / macOS / Docker）
+
+项目已支持跨系统零改动迁移（所有路径使用 OS 无关处理，行尾由 `.gitattributes` 统一为 LF，Docker 构建开启多架构兼容）。
+
+### 方式一：Docker Compose 一键部署（推荐，Linux / macOS / Windows 通用）
+
+```bash
+cp .env.example .env      # 修改 MYSQL_PASSWORD 与 JWT_SECRET
+docker compose up -d --build
+# 访问 http://localhost:8080 （包含 MySQL + Go 后端 + Nginx 前端与 SEO 代理）
+```
+
+### 方式二：单二进制免 Nginx 部署（支持 Linux amd64/arm64、macOS、Windows）
+
+```bash
+# 1. 一键打包前端静态产物 + 五大平台后端可执行文件（输出至 release/）
+python3 tools/portable.py build-all
+
+# 2. 在目标服务器直接用单个 Go 进程同时提供 API 与前端 SPA（含服务端轻量 SEO 注入）
+FRONTEND_DIST=./frontend-dist UPLOAD_DIR=./uploads GIN_MODE=release ./vilivala-linux-amd64
+```
+
+### 数据打包与跨机迁移（数据库 + 上传图片）
+
+```bash
+# 在源机器导出完整迁移包（backups/vilivala-migration-*.tar.gz）
+python3 tools/portable.py pack
+
+# 在新机器一键恢复数据库与 uploads/ 目录
+python3 tools/portable.py unpack backups/vilivala-migration-YYYYMMDD-HHMMSS.tar.gz
+```
+
 ## 功能
 
 - 前台：文章列表、搜索、分页、分类/标签筛选、文章详情（Markdown、代码高亮与复制、目录 TOC）

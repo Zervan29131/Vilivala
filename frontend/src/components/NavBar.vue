@@ -1,15 +1,15 @@
 <template>
   <header class="sticky top-0 z-40 nav-blur border-b border-gray-200/80 dark:border-white/10">
-    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-4 h-14 flex items-center justify-between gap-3 sm:gap-4">
       <!-- Brand -->
-      <router-link to="/" class="flex items-center gap-2.5 shrink-0 group">
-        <img :src="siteConfig.logo" :alt="site.config.site_title" class="w-8 h-8 rounded-full object-cover" />
-        <span class="text-[17px] font-bold tracking-tight text-[#213547] dark:text-white group-hover:text-[#42b883] transition-colors">
+      <router-link to="/" class="flex items-center gap-2.5 shrink-0 group min-w-0">
+        <img :src="siteConfig.logo" :alt="site.config.site_title" class="w-8 h-8 rounded-full object-cover shrink-0" />
+        <span class="text-[16px] sm:text-[17px] font-bold tracking-tight text-[#213547] dark:text-white group-hover:text-[#42b883] transition-colors truncate">
           {{ site.config.site_title }}
         </span>
       </router-link>
 
-      <!-- Search (desktop: supports both direct submit & Ctrl+K overlay modal) -->
+      <!-- Search (tablet & desktop) -->
       <form class="hidden md:flex items-center flex-1 max-w-xs" @submit.prevent="submitSearch">
         <div class="relative w-full">
           <input
@@ -31,7 +31,7 @@
         </div>
       </form>
 
-      <!-- Desktop Nav -->
+      <!-- Desktop Nav (lg+) -->
       <nav class="hidden lg:flex items-center gap-1 text-sm">
         <router-link to="/" class="nav-item" exact-active-class="nav-active">首页</router-link>
 
@@ -112,7 +112,6 @@
           </div>
         </div>
 
-        <!-- Terminal Browser Start Page Entry -->
         <router-link
           to="/terminal"
           class="nav-item font-mono text-xs inline-flex items-center gap-1"
@@ -124,7 +123,7 @@
 
         <router-link to="/admin" class="nav-item">后台</router-link>
 
-        <!-- Theme Switcher (3-state) -->
+        <!-- Theme Switcher -->
         <button
           type="button"
           class="ml-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors inline-flex items-center gap-1"
@@ -136,11 +135,11 @@
         </button>
       </nav>
 
-      <!-- Mobile Actions -->
-      <div class="flex lg:hidden items-center gap-1">
+      <!-- Mobile & Tablet Actions (< lg) -->
+      <div class="flex lg:hidden items-center gap-1 shrink-0">
         <button
           type="button"
-          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
+          class="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
           aria-label="打开搜索"
           @click="$emit('open-search')"
         >
@@ -150,16 +149,18 @@
         </button>
         <button
           type="button"
-          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
           :title="themeLabel"
+          aria-label="切换主题"
           @click="theme.cycle()"
         >
           {{ themeIcon }}
         </button>
         <button
           type="button"
-          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
-          aria-label="打开菜单"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
+          :aria-label="mobileOpen ? '关闭菜单' : '打开菜单'"
+          :aria-expanded="mobileOpen"
           @click="mobileOpen = !mobileOpen"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,36 +171,96 @@
       </div>
     </div>
 
-    <!-- Mobile Drawer -->
-    <div v-if="mobileOpen" class="lg:hidden border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] px-4 py-4 space-y-3">
-      <form @submit.prevent="submitSearch">
-        <input v-model="kw" class="input-field" placeholder="搜索文章、关键词…" />
-      </form>
-      <div class="flex flex-col space-y-1 text-sm">
-        <router-link to="/" class="drop-link" @click="mobileOpen = false">首页</router-link>
-        <router-link
-          v-for="root in topCategories"
-          :key="root.id"
-          :to="`/categories/${root.slug}`"
-          class="drop-link"
-          @click="mobileOpen = false"
+    <!-- Mobile / Tablet Overlay Drawer -->
+    <teleport to="body">
+      <div
+        v-if="mobileOpen"
+        class="lg:hidden fixed inset-0 top-14 z-40 bg-black/40 backdrop-blur-[1px]"
+        @click.self="mobileOpen = false"
+      >
+        <nav
+          class="bg-white dark:bg-[#1e1e1e] border-b border-gray-200 dark:border-white/10 shadow-xl px-4 py-4 space-y-3 max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain pb-safe"
+          aria-label="移动端导航"
         >
-          {{ root.name }} ({{ root.total_count }})
-        </router-link>
-        <router-link to="/archives" class="drop-link" @click="mobileOpen = false">时间归档</router-link>
-        <router-link to="/categories" class="drop-link" @click="mobileOpen = false">分类与标签</router-link>
-        <router-link to="/terminal" class="drop-link font-mono" @click="mobileOpen = false">&gt;_ 终端起始页</router-link>
-        <router-link to="/pages/about" class="drop-link" @click="mobileOpen = false">关于</router-link>
-        <router-link to="/pages/links" class="drop-link" @click="mobileOpen = false">友情链接</router-link>
-        <router-link to="/pages/sponsor" class="drop-link" @click="mobileOpen = false">赞助支持</router-link>
-        <router-link to="/admin" class="drop-link text-[#42b883]" @click="mobileOpen = false">后台管理</router-link>
+          <form class="md:hidden" @submit.prevent="submitSearch">
+            <input
+              v-model="kw"
+              class="input-field !text-[16px]"
+              placeholder="搜索文章、关键词…"
+            />
+          </form>
+
+          <div class="flex flex-col space-y-1 text-sm">
+            <router-link to="/" class="drop-link" @click="mobileOpen = false">首页</router-link>
+
+            <!-- Accordion 3-level Categories -->
+            <div v-for="root in topCategories" :key="root.id" class="space-y-0.5">
+              <div class="flex items-center justify-between">
+                <router-link
+                  :to="`/categories/${root.slug}`"
+                  class="drop-link flex-1"
+                  @click="mobileOpen = false"
+                >
+                  {{ root.name }} <span class="text-xs text-gray-400">({{ root.total_count }})</span>
+                </router-link>
+                <button
+                  v-if="root.children?.length"
+                  type="button"
+                  class="px-3 py-2 text-xs text-gray-400 hover:text-[#42b883]"
+                  :aria-label="`展开 ${root.name} 子分类`"
+                  @click="toggleCatExpand(root.id)"
+                >
+                  <span class="inline-block transition-transform" :class="{ 'rotate-180': expandedCats.has(root.id) }">▾</span>
+                </button>
+              </div>
+
+              <div
+                v-if="root.children?.length && expandedCats.has(root.id)"
+                class="pl-4 ml-3 border-l border-gray-200 dark:border-white/10 space-y-0.5"
+              >
+                <div v-for="child in root.children" :key="child.id">
+                  <router-link
+                    :to="`/categories/${child.slug}`"
+                    class="drop-link !py-1.5 !text-xs flex items-center justify-between"
+                    @click="mobileOpen = false"
+                  >
+                    <span>{{ child.name }}</span>
+                    <span class="text-gray-400">{{ child.total_count }}</span>
+                  </router-link>
+                  <div v-if="child.children?.length" class="pl-3 ml-2 border-l border-gray-200/70 dark:border-white/10">
+                    <router-link
+                      v-for="grand in child.children"
+                      :key="grand.id"
+                      :to="`/categories/${grand.slug}`"
+                      class="drop-link !py-1 !text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between"
+                      @click="mobileOpen = false"
+                    >
+                      <span>{{ grand.name }}</span>
+                      <span class="opacity-70">{{ grand.total_count }}</span>
+                    </router-link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-1 border-t border-gray-100 dark:border-white/10" />
+            <router-link to="/archives" class="drop-link" @click="mobileOpen = false">时间归档</router-link>
+            <router-link to="/categories" class="drop-link" @click="mobileOpen = false">分类与标签</router-link>
+            <router-link to="/terminal" class="drop-link font-mono" @click="mobileOpen = false">&gt;_ 终端起始页</router-link>
+            <router-link to="/pages/about" class="drop-link" @click="mobileOpen = false">关于</router-link>
+            <router-link to="/pages/links" class="drop-link" @click="mobileOpen = false">友情链接</router-link>
+            <router-link to="/pages/changelog" class="drop-link" @click="mobileOpen = false">更新日志</router-link>
+            <router-link to="/pages/sponsor" class="drop-link" @click="mobileOpen = false">赞助支持</router-link>
+            <router-link to="/admin" class="drop-link text-[#42b883]" @click="mobileOpen = false">后台管理</router-link>
+          </div>
+        </nav>
       </div>
-    </div>
+    </teleport>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCategories } from '@/api'
 import type { Category } from '@/api/types'
@@ -217,6 +278,7 @@ const theme = useThemeStore()
 const topCategories = ref<Category[]>([])
 const kw = ref('')
 const mobileOpen = ref(false)
+const expandedCats = ref<Set<number>>(new Set())
 
 const themeIcon = computed(() =>
   theme.mode === 'dark' ? '🌙' : theme.mode === 'light' ? '☀️' : '🖥️'
@@ -225,9 +287,22 @@ const themeLabel = computed(() =>
   theme.mode === 'dark' ? '深色' : theme.mode === 'light' ? '浅色' : '跟随系统'
 )
 
+function toggleCatExpand(id: number) {
+  const next = new Set(expandedCats.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  expandedCats.value = next
+}
+
 function submitSearch() {
   mobileOpen.value = false
   router.push({ path: '/', query: { keyword: kw.value.trim() || undefined } })
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (mobileOpen.value && e.key === 'Escape') {
+    mobileOpen.value = false
+  }
 }
 
 watch(
@@ -238,7 +313,19 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => route.fullPath,
+  () => {
+    mobileOpen.value = false
+  }
+)
+
+watch(mobileOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
 onMounted(async () => {
+  window.addEventListener('keydown', onKeydown)
   try {
     const res = await getCategories(true)
     const order = ['code', 'toread', 'fun']
@@ -251,15 +338,22 @@ onMounted(async () => {
     /* ignore */
   }
 })
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
 .nav-blur {
   @apply bg-white/95 dark:bg-[#1a1a1a]/95;
 }
-@supports (backdrop-filter: blur(12px)) {
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
   .nav-blur {
-    @apply bg-white/85 dark:bg-[#1a1a1a]/85 backdrop-blur-md;
+    @apply bg-white/85 dark:bg-[#1a1a1a]/85;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 }
 .nav-item {
@@ -269,6 +363,6 @@ onMounted(async () => {
   @apply text-[#42b883] dark:text-[#4fc08d] font-medium;
 }
 .drop-link {
-  @apply block px-3 py-1.5 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-[#42b883]/10 hover:text-[#42b883] transition-colors;
+  @apply block px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-[#42b883]/10 hover:text-[#42b883] transition-colors;
 }
 </style>

@@ -23,6 +23,7 @@ type Config struct {
 	SiteDescription    string
 	CORSAllowedOrigins string
 	FrontendDist       string
+	UploadDir          string
 }
 
 // AppConfig is the global config instance
@@ -49,6 +50,7 @@ func Load() {
 		SiteDescription:    getEnv("SITE_DESCRIPTION", "这是存在于某处的幻想世界 · Zervanのblog"),
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),
 		FrontendDist:       getEnv("FRONTEND_DIST", ""),
+		UploadDir:          getEnv("UPLOAD_DIR", "uploads"),
 	}
 
 	log.Printf("[Config] Server port: %s | GinMode: %s", AppConfig.ServerPort, AppConfig.GinMode)

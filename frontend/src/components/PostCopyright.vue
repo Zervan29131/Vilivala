@@ -33,6 +33,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useSiteStore } from '@/stores/site'
+import { copyText } from '@/utils/clipboard'
 import { formatDate } from '@/utils/format'
 import { toast } from '@/utils/toast'
 
@@ -47,12 +48,11 @@ const copied = ref(false)
 const fullUrl = computed(() => `${window.location.origin}/posts/${props.slug}`)
 
 async function copyUrl() {
-  try {
-    await navigator.clipboard.writeText(fullUrl.value)
+  if (await copyText(fullUrl.value)) {
     copied.value = true
     toast.success('文章链接已复制')
     setTimeout(() => (copied.value = false), 1800)
-  } catch {
+  } else {
     toast.error('复制失败')
   }
 }

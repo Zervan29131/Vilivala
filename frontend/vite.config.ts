@@ -10,6 +10,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {
@@ -33,5 +34,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    target: ['es2020', 'edge88', 'firefox90', 'chrome88', 'safari14'],
+    cssTarget: ['chrome88', 'edge88', 'firefox90', 'safari14'],
   },
 })
