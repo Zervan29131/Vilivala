@@ -53,19 +53,51 @@
 }
 
 /* ---------- Markdown article ---------- */
-.md-body { @apply text-[16px] leading-[1.85] text-[#2c3e50] dark:text-gray-300 break-words; }
-.md-body h1 { @apply text-3xl mt-10 mb-4 text-[#213547] dark:text-white; }
-.md-body h2 { @apply text-2xl mt-10 mb-4 pb-2 border-b border-gray-200/80 dark:border-white/10 text-[#213547] dark:text-white; scroll-margin-top: 5rem; }
-.md-body h3 { @apply text-xl mt-8 mb-3 text-[#213547] dark:text-gray-100; scroll-margin-top: 5rem; }
-.md-body h4 { @apply text-lg mt-6 mb-2 text-[#213547] dark:text-gray-100; }
+.md-body { @apply text-[16px] leading-[1.85] text-[#2c3e50] dark:text-gray-300 break-words; overflow-wrap: anywhere; }
+.md-body h1 { @apply text-2xl sm:text-3xl mt-10 mb-4 text-[#213547] dark:text-white; scroll-margin-top: 5rem; }
+.md-body h2 { @apply text-xl sm:text-2xl mt-10 mb-4 pb-2 border-b border-gray-200/80 dark:border-white/10 text-[#213547] dark:text-white; scroll-margin-top: 5rem; }
+.md-body h3 { @apply text-lg sm:text-xl mt-8 mb-3 text-[#213547] dark:text-gray-100; scroll-margin-top: 5rem; }
+.md-body h4 { @apply text-base sm:text-lg mt-6 mb-2 text-[#213547] dark:text-gray-100; scroll-margin-top: 5rem; }
+.md-body .md-heading { @apply relative; }
+.md-body .header-anchor { @apply ml-1.5 text-[#42b883] no-underline opacity-0 hover:opacity-100 focus:opacity-100 font-normal text-[0.85em] transition-opacity select-none; }
+.md-body .md-heading:hover .header-anchor { @apply opacity-75; }
 .md-body p { @apply my-4; }
-.md-body a { @apply text-[#42b883] dark:text-[#4fc08d] underline underline-offset-2 hover:opacity-80; }
+.md-body a:not(.header-anchor):not(.friend-card):not(.md-img-broken-link) { @apply text-[#42b883] dark:text-[#4fc08d] underline underline-offset-2 hover:opacity-80; }
+.md-body a.ext-link::after { content: ' ↗'; font-size: 0.78em; opacity: 0.75; }
 .md-body ul { @apply list-disc pl-6 my-4 space-y-1.5; }
 .md-body ol { @apply list-decimal pl-6 my-4 space-y-1.5; }
 .md-body blockquote { @apply my-5 pl-4 py-1.5 border-l-4 border-[#42b883] bg-[#42b883]/5 dark:bg-[#42b883]/10 text-gray-600 dark:text-gray-300 rounded-r-lg; }
 .md-body blockquote p { @apply my-1; }
-.md-body img { @apply rounded-lg my-4 max-w-full border border-gray-200/60 dark:border-white/10; }
+.md-body img { @apply rounded-lg my-4 max-w-full mx-auto border border-gray-200/60 dark:border-white/10; }
 .md-body img[data-lightbox="true"] { @apply cursor-zoom-in transition-opacity hover:opacity-95; }
+.md-body .md-figure { @apply my-5 text-center; }
+.md-body .md-figure img { @apply my-0 mx-auto; }
+.md-body .md-figcaption { @apply mt-2 text-xs text-gray-400 dark:text-gray-500; }
+.md-body .md-img-broken { @apply my-4 px-4 py-3 rounded-lg border border-dashed border-gray-300 dark:border-white/15 bg-gray-50 dark:bg-white/[0.03] text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between gap-3 flex-wrap; }
+.md-body .md-img-broken-link { @apply text-[#42b883] dark:text-[#4fc08d] hover:underline shrink-0; }
+
+/* VitePress / GitHub style Callout blocks */
+.md-body .callout { @apply my-5 px-4 py-3 rounded-lg border-l-4 text-sm leading-relaxed; }
+.md-body .callout p { @apply my-1.5; }
+.md-body .callout-title { @apply font-semibold mb-1 text-xs uppercase tracking-wider; }
+.md-body .callout-tip { @apply border-[#42b883] bg-[#42b883]/10 text-[#213547] dark:text-gray-200; }
+.md-body .callout-tip .callout-title { @apply text-[#33a06f] dark:text-[#4fc08d]; }
+.md-body .callout-info { @apply border-sky-500 bg-sky-500/10 text-[#213547] dark:text-gray-200; }
+.md-body .callout-info .callout-title { @apply text-sky-600 dark:text-sky-400; }
+.md-body .callout-warning { @apply border-amber-500 bg-amber-500/10 text-[#213547] dark:text-gray-200; }
+.md-body .callout-warning .callout-title { @apply text-amber-600 dark:text-amber-400; }
+.md-body .callout-danger { @apply border-rose-500 bg-rose-500/10 text-[#213547] dark:text-gray-200; }
+.md-body .callout-danger .callout-title { @apply text-rose-600 dark:text-rose-400; }
+
+/* Friend link card wall (::: cardList) */
+.md-body .friend-grid { @apply my-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5; }
+.md-body .friend-card { @apply flex items-center gap-3 p-3.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-gray-50/60 dark:bg-white/[0.03] hover:border-[#42b883] hover:bg-[#42b883]/5 dark:hover:bg-[#42b883]/10 no-underline transition-all; }
+.md-body .friend-avatar-wrap { @apply w-11 h-11 rounded-full overflow-hidden shrink-0 bg-[#42b883]/15 flex items-center justify-center; }
+.md-body .friend-avatar { @apply w-full h-full object-cover m-0 border-0 rounded-full; }
+.md-body .friend-initial { @apply text-sm font-bold text-[#42b883] dark:text-[#4fc08d]; }
+.md-body .friend-meta { @apply min-w-0 flex-1 flex flex-col; }
+.md-body .friend-name { @apply text-sm font-semibold text-[#213547] dark:text-white truncate; }
+.md-body .friend-desc { @apply text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug mt-0.5; }
 .md-body hr { @apply my-8 border-gray-200 dark:border-white/10; }
 .md-body :not(pre) > code { @apply px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-[#35495e] dark:text-[#4fc08d] text-[0.88em] font-mono; }
 .md-body table { @apply w-full my-5 text-sm border-collapse block overflow-x-auto; }
@@ -79,19 +111,23 @@
 .code-block pre { @apply m-0 overflow-x-auto; }
 .code-block code.hljs { @apply block p-4 text-[13.5px] leading-6 font-mono bg-transparent text-[#24292f] dark:text-[#c9d1d9]; }
 
-/* highlight.js — GitHub Light */
+/* highlight.js — GitHub Light + Diff Line Backgrounds */
 .hljs-comment, .hljs-quote { color: #6e7781; font-style: italic; }
 .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: #cf222e; }
-.hljs-string, .hljs-regexp, .hljs-addition { color: #0a3069; }
+.hljs-string, .hljs-regexp { color: #0a3069; }
+.hljs-addition { color: #116329; background-color: rgba(46, 160, 67, 0.15); display: inline-block; width: 100%; padding: 0 4px; border-radius: 3px; }
+.hljs-deletion { color: #82071e; background-color: rgba(248, 81, 73, 0.15); display: inline-block; width: 100%; padding: 0 4px; border-radius: 3px; }
 .hljs-number, .hljs-symbol, .hljs-bullet, .hljs-attribute { color: #0550ae; }
 .hljs-title, .hljs-section, .hljs-title.function_, .hljs-title.class_ { color: #8250df; }
 .hljs-built_in, .hljs-type, .hljs-name, .hljs-tag { color: #116329; }
 .hljs-variable, .hljs-template-variable, .hljs-params { color: #953800; }
 
-/* highlight.js — GitHub Dark */
+/* highlight.js — GitHub Dark + Diff Line Backgrounds */
 .dark .hljs-comment, .dark .hljs-quote { color: #8b949e; }
 .dark .hljs-keyword, .dark .hljs-selector-tag, .dark .hljs-literal, .dark .hljs-doctag { color: #ff7b72; }
-.dark .hljs-string, .dark .hljs-regexp, .dark .hljs-addition { color: #a5d6ff; }
+.dark .hljs-string, .dark .hljs-regexp { color: #a5d6ff; }
+.dark .hljs-addition { color: #7ee787; background-color: rgba(46, 160, 67, 0.2); }
+.dark .hljs-deletion { color: #ffa198; background-color: rgba(248, 81, 73, 0.2); }
 .dark .hljs-number, .dark .hljs-symbol, .dark .hljs-bullet, .dark .hljs-attribute { color: #79c0ff; }
 .dark .hljs-title, .dark .hljs-section, .dark .hljs-title.function_, .dark .hljs-title.class_ { color: #d2a8ff; }
 .dark .hljs-built_in, .dark .hljs-type, .dark .hljs-name, .dark .hljs-tag { color: #7ee787; }

@@ -83,6 +83,13 @@ type Page struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// SiteSetting stores singleton site-wide dynamic configuration as JSON (ID = 1).
+type SiteSetting struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Payload   string    `gorm:"type:longtext" json:"payload"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // AfterFind derives reading_time (minutes) from the stored word count.
 func (p *Post) AfterFind(_ *gorm.DB) error {
 	p.ReadingTime = ReadingMinutes(p.WordCount)

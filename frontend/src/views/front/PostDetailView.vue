@@ -8,7 +8,7 @@
 
     <!-- Vue-docs style: Left sticky TOC + Right main content -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
-      <!-- Left TOC -->
+      <!-- Desktop Left Sticky TOC -->
       <aside class="hidden lg:block sticky top-20">
         <div v-if="toc.length" class="card p-4 text-sm max-h-[calc(100vh-7rem)] overflow-y-auto">
           <h3 class="font-semibold text-xs uppercase tracking-wider text-gray-400 mb-3">文章目录</h3>
@@ -38,6 +38,17 @@
 
       <!-- Main Article -->
       <article class="min-w-0 max-w-4xl">
+        <!-- Admin Draft Preview Banner -->
+        <div
+          v-if="post.is_preview"
+          class="mb-4 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between gap-3 flex-wrap"
+        >
+          <span>📝 当前为管理员<strong>草稿预览</strong>模式，该文章尚未公开发布（不计入阅读量）。</span>
+          <router-link :to="`/admin/posts/${post.id}/edit`" class="underline font-medium shrink-0">
+            返回编辑器 →
+          </router-link>
+        </div>
+
         <!-- Breadcrumb -->
         <div class="flex items-center flex-wrap gap-1.5 text-xs text-gray-400 mb-3">
           <router-link to="/" class="hover:text-[#42b883]">首页</router-link>
@@ -52,7 +63,7 @@
         </div>
 
         <header class="mb-6">
-          <div class="flex items-center gap-2 mb-2" v-if="post.is_top">
+          <div v-if="post.is_top" class="flex items-center gap-2 mb-2">
             <span class="badge bg-[#42b883]/15 text-[#42b883]">置顶文章</span>
           </div>
           <h1 class="text-2xl sm:text-4xl font-bold text-[#213547] dark:text-white leading-tight">
@@ -60,6 +71,10 @@
           </h1>
           <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
             <span>发布于 {{ formatDate(post.created_at) }}</span>
+            <template v-if="showUpdatedDate">
+              <span>·</span>
+              <span>更新于 {{ formatDate(post.updated_at) }}</span>
+            </template>
             <span>·</span>
             <span>{{ post.word_count }} 字</span>
             <span>·</span>
@@ -79,8 +94,58 @@
           </div>
         </header>
 
+        <!-- Mobile / Tablet Collapsible TOC (< 1024px) -->
+        <div v-if="toc.length" class="lg:hidden mb-4 card overflow-hidden">
+          <button
+            type="button"
+            class="w-full px-4 py-3 flex items-center justify-between text-xs font-semibold text-[#213547] dark:text-gray-200"
+            :aria-expanded="mobileTocOpen"
+            @click="mobileTocOpen = !mobileTocOpen"
+          >
+            <span>📑 本页目录（共 {{ toc.length }} 节）</span>
+            <span class="text-gray-400 transition-transform" :class="{ 'rotate-180': mobileTocOpen }">▾</span>
+          </button>
+          <ul
+            v-if="mobileTocOpen"
+            class="px-4 pb-3 pt-1 border-t border-gray-100 dark:border-white/10 max-h-64 overflow-y-auto space-y-1"
+          >
+            <li
+              v-for="item in toc"
+              :key="item.id"
+              :style="{ paddingLeft: `${(item.level - 1) * 12}px` }"
+            >
+              <a
+                :href="`#${item.id}`"
+                class="block py-1 text-xs transition-colors"
+                :class="
+                  active === item.id
+                    ? 'text-[#42b883] dark:text-[#4fc08d] font-medium'
+                    : 'text-gray-600 dark:text-gray-400'
+                "
+                @click.prevent="jumpMobile(item.id)"
+              >
+                {{ item.text }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Stale Technical Article Gentle Notice -->
+        <div
+          v-if="staleYears >= 2 && isTechPost"
+          class="mb-4 px-4 py-2.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed"
+        >
+          ⏳ 本文发布于 {{ staleYears }} 年前（{{ formatDate(post.created_at) }}），文中涉及的部分软件版本、环境或命令可能已随时间更新，阅读时请注意甄别。
+        </div>
+
         <div class="card p-6 sm:p-10">
           <div ref="bodyRef" class="md-body" v-html="html" @click="onBodyClick" />
+
+          <!-- Reward & Share Actions -->
+          <PostActions :title="post.title" :slug="post.slug" />
+
+          <!-- Original Copyright Box -->
+          <PostCopyright :slug="post.slug" :created-at="post.created_at" />
         </div>
 
         <!-- Prev / Next Navigation -->
@@ -146,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPostBySlug } from '@/api'
 import type { Post } from '@/api/types'
@@ -154,7 +219,9 @@ import LoadingState from '@/components/LoadingState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox.vue'
-import { renderMarkdown, type TocItem } from '@/utils/markdown'
+import PostActions from '@/components/PostActions.vue'
+import PostCopyright from '@/components/PostCopyright.vue'
+import { attachMarkdownImageFallbacks, renderMarkdown, type TocItem } from '@/utils/markdown'
 import { formatDate } from '@/utils/format'
 import { updatePageMeta } from '@/utils/seo'
 import { toast } from '@/utils/toast'
@@ -167,10 +234,28 @@ const toc = ref<TocItem[]>([])
 const loading = ref(true)
 const errorMsg = ref('')
 const active = ref('')
+const mobileTocOpen = ref(false)
 
 const lightboxOpen = ref(false)
 const lightboxImages = ref<LightboxImage[]>([])
 const lightboxIndex = ref(0)
+
+const showUpdatedDate = computed(() => {
+  if (!post.value?.updated_at || !post.value?.created_at) return false
+  return formatDate(post.value.updated_at) !== formatDate(post.value.created_at)
+})
+
+const isTechPost = computed(() => {
+  const topSlug = post.value?.category?.path?.[0]?.slug?.toLowerCase()
+  return topSlug === 'code'
+})
+
+const staleYears = computed(() => {
+  if (!post.value?.created_at) return 0
+  const created = new Date(post.value.created_at).getTime()
+  if (isNaN(created)) return 0
+  return Math.floor((Date.now() - created) / (365.25 * 24 * 3600 * 1000))
+})
 
 let observer: IntersectionObserver | null = null
 
@@ -185,10 +270,26 @@ function observeHeadings() {
   document.querySelectorAll('.md-body h1[id], .md-body h2[id], .md-body h3[id]').forEach((el) => observer!.observe(el))
 }
 
+function scrollToInitialHash() {
+  const rawHash = window.location.hash.slice(1)
+  if (!rawHash) return
+  try {
+    const id = decodeURIComponent(rawHash)
+    const target = document.getElementById(id)
+    if (target) {
+      target.scrollIntoView({ behavior: 'auto', block: 'start' })
+      active.value = id
+    }
+  } catch {
+    /* ignore malformed hash */
+  }
+}
+
 async function load(slug: string) {
   loading.value = true
   errorMsg.value = ''
   post.value = null
+  mobileTocOpen.value = false
   try {
     const res = await getPostBySlug(slug)
     post.value = res.data
@@ -216,7 +317,9 @@ async function load(slug: string) {
     loading.value = false
   }
   await nextTick()
+  attachMarkdownImageFallbacks(bodyRef.value)
   observeHeadings()
+  scrollToInitialHash()
 }
 
 function retryLoad() {
@@ -231,8 +334,31 @@ function jump(id: string) {
   active.value = id
 }
 
+function jumpMobile(id: string) {
+  mobileTocOpen.value = false
+  jump(id)
+}
+
 async function onBodyClick(e: MouseEvent) {
   const target = e.target as HTMLElement
+
+  // Heading `#` anchor copy & jump
+  const anchor = target.closest('.header-anchor') as HTMLAnchorElement | null
+  if (anchor) {
+    e.preventDefault()
+    const id = anchor.dataset.anchor || ''
+    if (id) {
+      jump(id)
+      const full = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(id)}`
+      try {
+        await navigator.clipboard.writeText(full)
+        toast.success('章节链接已复制')
+      } catch {
+        /* ignore clipboard failure */
+      }
+    }
+    return
+  }
 
   // Code copy button
   const btn = target.closest('.copy-btn') as HTMLButtonElement | null
@@ -248,10 +374,10 @@ async function onBodyClick(e: MouseEvent) {
     return
   }
 
-  // Image lightbox
-  const img = target.closest('img') as HTMLImageElement | null
+  // Image lightbox (exclude friend avatars)
+  const img = target.closest('img[data-lightbox="true"]') as HTMLImageElement | null
   if (img && bodyRef.value) {
-    const imgs = Array.from(bodyRef.value.querySelectorAll('img'))
+    const imgs = Array.from(bodyRef.value.querySelectorAll('img[data-lightbox="true"]')) as HTMLImageElement[]
     const idx = imgs.indexOf(img)
     if (idx >= 0) {
       lightboxImages.value = imgs.map((el) => ({ src: el.src, alt: el.alt || '' }))

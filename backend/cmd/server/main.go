@@ -62,6 +62,7 @@ func autoMigrate() error {
 		&model.Tag{},
 		&model.Post{},
 		&model.Page{},
+		&model.SiteSetting{},
 	); err != nil {
 		return err
 	}

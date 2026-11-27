@@ -49,6 +49,9 @@
             </td>
             <td class="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{{ formatDate(p.created_at) }}</td>
             <td class="px-4 py-3 text-right whitespace-nowrap space-x-3">
+              <router-link :to="`/posts/${p.slug}`" target="_blank" class="text-gray-500 dark:text-gray-400 hover:text-[#42b883]">
+                预览
+              </router-link>
               <button class="text-gray-600 dark:text-gray-300 hover:text-[#42b883]" @click="toggle(p)">
                 {{ p.status === 'published' ? '转草稿' : '发布' }}
               </button>

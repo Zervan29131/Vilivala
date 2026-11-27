@@ -847,6 +847,100 @@
 
 ---
 
+# v1.1.2 阅读精修、个人站闭环与后台仪表盘（本轮实现）
+
+## A. 管理员草稿预览（变更：`GET /api/posts/:slug`）
+
+- 游客或普通请求：仅返回 `status = "published"` 的文章（未发布返回 `404`）。
+- 若请求头携带**有效管理员 JWT**（`Authorization: Bearer <token>`）：允许读取 `status = "draft"` 的文章用于前台真实样式预览；读取草稿时**不累加 `view_count`**，且响应增加布尔标记 `"is_preview": true`。Token 缺失或过期时不报错，按游客逻辑处理。
+
+## B. 站点公开配置与全站统计（新增）
+
+**GET** `/api/site-config`（公开）
+
+返回站点动态配置（首次未配置时自动返回默认值）以及实时全站文章统计 `stats`：
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "site_title": "Zervan的小站",
+    "site_description": "Zervanのblog",
+    "hero_title": "这是存在于某处的幻想世界",
+    "hero_tagline": "Be the change you want to see in the World",
+    "subtitles": [
+      "这是存在于某处的幻想世界",
+      "Be the change you want to see in the World",
+      "记录技术、思想与未来"
+    ],
+    "blogger_name": "Zervan",
+    "blogger_slogan": "天下最普通的人之一",
+    "blogger_avatar": "/img/console.jpg",
+    "notice_enabled": true,
+    "notice_mode": "custom",
+    "notice_text": "Stay hungry, stay foolish · 欢迎来到 Zervan 的小站",
+    "reward_enabled": true,
+    "reward_wording": "觉得文章有帮助？请我喝杯咖啡吧 ~",
+    "copyright_enabled": true,
+    "copyright_notice": "本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！",
+    "since_year": 2021,
+    "icp_number": "",
+    "icp_url": "https://beian.miit.gov.cn/",
+    "gongan_number": "",
+    "gongan_url": "https://www.beian.gov.cn/",
+    "socials": [
+      { "title": "微博", "link": "https://weibo.com/zervan" }
+    ],
+    "stats": {
+      "published_posts": 255,
+      "total_words": 480000,
+      "total_views": 1024
+    }
+  }
+}
+```
+
+## C. 后台更新站点配置（新增，需 JWT）
+
+**PUT** `/api/admin/site-config`
+
+- 请求体与 B 中配置字段一致（忽略 `stats`）。
+- 校验规则：`site_title` 必填（1–64 字符）；`notice_mode` 仅允许 `custom` 或 `hitokoto`；外链地址仅允许空字符串、`http://`、`https://`、`mailto:` 或以 `/` 开头的站内路径，非法协议返回 `400`。
+- 持久化至 `site_settings` 表（`id = 1`），响应返回最新完整配置（同 B）。
+
+## D. 后台数据仪表盘（新增，需 JWT）
+
+**GET** `/api/admin/dashboard`
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "total_posts": 255,
+    "published_posts": 255,
+    "draft_posts": 0,
+    "categories": 25,
+    "tags": 52,
+    "pages": 4,
+    "total_words": 480000,
+    "total_views": 1024,
+    "top_posts": [
+      { "id": 1, "title": "Git实际操作", "slug": "c6d7d3", "status": "published", "view_count": 120, "word_count": 3200, "created_at": "..." }
+    ],
+    "recent_posts": [
+      { "id": 2, "title": "...", "slug": "...", "status": "published", "updated_at": "..." }
+    ],
+    "category_distribution": [
+      { "id": 1, "name": "code", "slug": "code", "total_count": 36 }
+    ]
+  }
+}
+```
+
+---
+
 # v1.2 规划（⏸ 暂缓，尚未实现，勿按此开发）
 
 > 该部分已评审但**搁置**，待内容迁移与界面重做完成后再启动。其中「关于页」「图片上传」已被上面的 v1.1 独立页面 / 上传接口取代。

@@ -3,9 +3,9 @@
     <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
       <!-- Brand -->
       <router-link to="/" class="flex items-center gap-2.5 shrink-0 group">
-        <img :src="siteConfig.logo" :alt="siteConfig.title" class="w-8 h-8 rounded-full object-cover" />
+        <img :src="siteConfig.logo" :alt="site.config.site_title" class="w-8 h-8 rounded-full object-cover" />
         <span class="text-[17px] font-bold tracking-tight text-[#213547] dark:text-white group-hover:text-[#42b883] transition-colors">
-          {{ siteConfig.title }}
+          {{ site.config.site_title }}
         </span>
       </router-link>
 
@@ -204,12 +204,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { getCategories } from '@/api'
 import type { Category } from '@/api/types'
 import { siteConfig } from '@/site.config'
+import { useSiteStore } from '@/stores/site'
 import { useThemeStore } from '@/stores/theme'
 
 defineEmits<{ 'open-search': [] }>()
 
 const route = useRoute()
 const router = useRouter()
+const site = useSiteStore()
 const theme = useThemeStore()
 
 const topCategories = ref<Category[]>([])

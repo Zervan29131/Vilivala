@@ -1,6 +1,7 @@
 <template>
   <aside class="space-y-5">
     <BloggerCard />
+    <BroadcastCard />
 
     <!-- 3-level Category Tree -->
     <div class="card p-5">
@@ -74,6 +75,7 @@ import { useRoute } from 'vue-router'
 import { getCategories, getTags } from '@/api'
 import type { Category, Tag } from '@/api/types'
 import BloggerCard from '@/components/BloggerCard.vue'
+import BroadcastCard from '@/components/BroadcastCard.vue'
 
 const route = useRoute()
 const categories = ref<Category[]>([])

@@ -38,10 +38,12 @@ const theme = useThemeStore()
 const router = useRouter()
 
 const links = [
+  { to: '/admin/dashboard', label: '数据概览' },
   { to: '/admin/posts', label: '文章管理' },
   { to: '/admin/categories', label: '分类管理' },
   { to: '/admin/tags', label: '标签管理' },
   { to: '/admin/pages', label: '独立页面' },
+  { to: '/admin/settings', label: '站点设置' },
 ]
 
 function logout() {

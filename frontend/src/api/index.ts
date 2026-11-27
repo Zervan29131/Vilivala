@@ -8,6 +8,8 @@ import type {
   PageSummary,
   PageDetail,
   SearchResponse,
+  SiteConfigData,
+  DashboardData,
   UploadResult,
   LoginPayload,
   LoginResponse,
@@ -35,9 +37,15 @@ export const getTags = () => http.get<Tag[]>('/tags')
 export const getArchives = () => http.get<ArchiveYear[]>('/archives')
 export const getPages = () => http.get<PageSummary[]>('/pages')
 export const getPageBySlug = (slug: string) => http.get<PageDetail>(`/pages/${slug}`)
+export const getSiteConfig = () => http.get<SiteConfigData>('/site-config')
 
 // ---- Auth ----
 export const login = (payload: LoginPayload) => http.post<LoginResponse>('/auth/login', payload)
+
+// ---- Admin: dashboard & site config ----
+export const adminGetDashboard = () => http.get<DashboardData>('/admin/dashboard')
+export const adminUpdateSiteConfig = (p: Omit<SiteConfigData, 'stats'>) =>
+  http.put<SiteConfigData>('/admin/site-config', p)
 
 // ---- Admin: posts ----
 export const adminGetPosts = (params?: {
